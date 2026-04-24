@@ -1,0 +1,215 @@
+{
+  "_meta": {
+    "description": "Synthetic IN-VBDM LunchBox time-series data for demo. 10 timesteps over ~10 days. Hotspot converges at ~18.5308°N, 73.8474°E (Koregaon Park area). Fogging intervention at step 6. Counts drop 60% by step 8.",
+    "coordinate_system": "WGS84 lat/lng (Pune, India)",
+    "hotspot_center": [18.5308, 73.8474],
+    "intervention_step": 6,
+    "schema": {
+      "step": "integer 1–10 (timestep index)",
+      "day_label": "human-readable day label",
+      "fogged": "boolean — true from step 6 onward",
+      "sensors": "array of 10 LunchBox sensor readings",
+      "sensor.id": "LB-01 … LB-10",
+      "sensor.lat": "latitude",
+      "sensor.lng": "longitude",
+      "sensor.count": "mosquito event count at this timestep",
+      "sensor.active": "boolean — sensor deployed at this step"
+    }
+  },
+  "timesteps": [
+    {
+      "step": 1,
+      "day_label": "Day 1",
+      "fogged": false,
+      "intervention_event": null,
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5240, "lng": 73.8390, "count": 4,  "active": true },
+        { "id": "LB-02", "lat": 18.5180, "lng": 73.8450, "count": 3,  "active": true },
+        { "id": "LB-03", "lat": 18.5290, "lng": 73.8510, "count": 6,  "active": true },
+        { "id": "LB-04", "lat": 18.5350, "lng": 73.8430, "count": 5,  "active": true },
+        { "id": "LB-05", "lat": 18.5310, "lng": 73.8480, "count": 14, "active": true },
+        { "id": "LB-06", "lat": 18.5270, "lng": 73.8460, "count": 9,  "active": true },
+        { "id": "LB-07", "lat": 18.5160, "lng": 73.8530, "count": 2,  "active": true },
+        { "id": "LB-08", "lat": 18.5400, "lng": 73.8500, "count": 3,  "active": true },
+        { "id": "LB-09", "lat": 18.5220, "lng": 73.8410, "count": 5,  "active": true },
+        { "id": "LB-10", "lat": 18.5380, "lng": 73.8370, "count": 2,  "active": true }
+      ]
+    },
+    {
+      "step": 2,
+      "day_label": "Day 2",
+      "fogged": false,
+      "intervention_event": null,
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5240, "lng": 73.8390, "count": 5,  "active": true },
+        { "id": "LB-02", "lat": 18.5180, "lng": 73.8450, "count": 4,  "active": true },
+        { "id": "LB-03", "lat": 18.5290, "lng": 73.8510, "count": 8,  "active": true },
+        { "id": "LB-04", "lat": 18.5350, "lng": 73.8430, "count": 6,  "active": true },
+        { "id": "LB-05", "lat": 18.5312, "lng": 73.8476, "count": 18, "active": true },
+        { "id": "LB-06", "lat": 18.5275, "lng": 73.8462, "count": 12, "active": true },
+        { "id": "LB-07", "lat": 18.5160, "lng": 73.8530, "count": 3,  "active": true },
+        { "id": "LB-08", "lat": 18.5400, "lng": 73.8500, "count": 4,  "active": true },
+        { "id": "LB-09", "lat": 18.5220, "lng": 73.8415, "count": 6,  "active": true },
+        { "id": "LB-10", "lat": 18.5380, "lng": 73.8370, "count": 3,  "active": true }
+      ]
+    },
+    {
+      "step": 3,
+      "day_label": "Day 3",
+      "fogged": false,
+      "intervention_event": null,
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5245, "lng": 73.8395, "count": 6,  "active": true },
+        { "id": "LB-02", "lat": 18.5185, "lng": 73.8455, "count": 4,  "active": true },
+        { "id": "LB-03", "lat": 18.5295, "lng": 73.8475, "count": 10, "active": true },
+        { "id": "LB-04", "lat": 18.5340, "lng": 73.8460, "count": 8,  "active": true },
+        { "id": "LB-05", "lat": 18.5308, "lng": 73.8474, "count": 24, "active": true },
+        { "id": "LB-06", "lat": 18.5280, "lng": 73.8465, "count": 15, "active": true },
+        { "id": "LB-07", "lat": 18.5175, "lng": 73.8510, "count": 4,  "active": true },
+        { "id": "LB-08", "lat": 18.5395, "lng": 73.8490, "count": 5,  "active": true },
+        { "id": "LB-09", "lat": 18.5228, "lng": 73.8420, "count": 7,  "active": true },
+        { "id": "LB-10", "lat": 18.5375, "lng": 73.8375, "count": 3,  "active": true }
+      ]
+    },
+    {
+      "step": 4,
+      "day_label": "Day 4",
+      "fogged": false,
+      "intervention_event": null,
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5250, "lng": 73.8400, "count": 7,  "active": true },
+        { "id": "LB-02", "lat": 18.5190, "lng": 73.8460, "count": 5,  "active": true },
+        { "id": "LB-03", "lat": 18.5300, "lng": 73.8470, "count": 13, "active": true },
+        { "id": "LB-04", "lat": 18.5330, "lng": 73.8470, "count": 11, "active": true },
+        { "id": "LB-05", "lat": 18.5308, "lng": 73.8474, "count": 29, "active": true },
+        { "id": "LB-06", "lat": 18.5285, "lng": 73.8468, "count": 19, "active": true },
+        { "id": "LB-07", "lat": 18.5180, "lng": 73.8500, "count": 5,  "active": true },
+        { "id": "LB-08", "lat": 18.5390, "lng": 73.8480, "count": 6,  "active": true },
+        { "id": "LB-09", "lat": 18.5235, "lng": 73.8425, "count": 8,  "active": true },
+        { "id": "LB-10", "lat": 18.5320, "lng": 73.8490, "count": 14, "active": true }
+      ]
+    },
+    {
+      "step": 5,
+      "day_label": "Day 5",
+      "fogged": false,
+      "intervention_event": null,
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5255, "lng": 73.8405, "count": 8,  "active": true },
+        { "id": "LB-02", "lat": 18.5195, "lng": 73.8462, "count": 6,  "active": true },
+        { "id": "LB-03", "lat": 18.5302, "lng": 73.8468, "count": 16, "active": true },
+        { "id": "LB-04", "lat": 18.5325, "lng": 73.8472, "count": 13, "active": true },
+        { "id": "LB-05", "lat": 18.5308, "lng": 73.8474, "count": 34, "active": true },
+        { "id": "LB-06", "lat": 18.5290, "lng": 73.8470, "count": 23, "active": true },
+        { "id": "LB-07", "lat": 18.5182, "lng": 73.8498, "count": 5,  "active": true },
+        { "id": "LB-08", "lat": 18.5385, "lng": 73.8475, "count": 7,  "active": true },
+        { "id": "LB-09", "lat": 18.5238, "lng": 73.8428, "count": 9,  "active": true },
+        { "id": "LB-10", "lat": 18.5315, "lng": 73.8485, "count": 18, "active": true }
+      ]
+    },
+    {
+      "step": 6,
+      "day_label": "Day 6 — FOGGING",
+      "fogged": true,
+      "intervention_event": {
+        "type": "fogging",
+        "timestamp": "2025-06-06T06:00:00+05:30",
+        "zone_center": [18.5308, 73.8474],
+        "zone_radius_m": 400,
+        "operator": "PCMC Ward 15",
+        "notes": "Thermal fogging conducted at peak hotspot zone. Pre-intervention max count: 38."
+      },
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5255, "lng": 73.8405, "count": 9,  "active": true },
+        { "id": "LB-02", "lat": 18.5195, "lng": 73.8462, "count": 7,  "active": true },
+        { "id": "LB-03", "lat": 18.5304, "lng": 73.8468, "count": 18, "active": true },
+        { "id": "LB-04", "lat": 18.5322, "lng": 73.8472, "count": 15, "active": true },
+        { "id": "LB-05", "lat": 18.5308, "lng": 73.8474, "count": 38, "active": true },
+        { "id": "LB-06", "lat": 18.5292, "lng": 73.8470, "count": 26, "active": true },
+        { "id": "LB-07", "lat": 18.5184, "lng": 73.8496, "count": 6,  "active": true },
+        { "id": "LB-08", "lat": 18.5382, "lng": 73.8472, "count": 8,  "active": true },
+        { "id": "LB-09", "lat": 18.5240, "lng": 73.8430, "count": 10, "active": true },
+        { "id": "LB-10", "lat": 18.5312, "lng": 73.8482, "count": 21, "active": true }
+      ]
+    },
+    {
+      "step": 7,
+      "day_label": "Day 7",
+      "fogged": true,
+      "intervention_event": null,
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5255, "lng": 73.8405, "count": 8,  "active": true },
+        { "id": "LB-02", "lat": 18.5195, "lng": 73.8462, "count": 6,  "active": true },
+        { "id": "LB-03", "lat": 18.5304, "lng": 73.8468, "count": 12, "active": true },
+        { "id": "LB-04", "lat": 18.5322, "lng": 73.8472, "count": 10, "active": true },
+        { "id": "LB-05", "lat": 18.5308, "lng": 73.8474, "count": 22, "active": true },
+        { "id": "LB-06", "lat": 18.5292, "lng": 73.8470, "count": 16, "active": true },
+        { "id": "LB-07", "lat": 18.5184, "lng": 73.8496, "count": 5,  "active": true },
+        { "id": "LB-08", "lat": 18.5382, "lng": 73.8472, "count": 7,  "active": true },
+        { "id": "LB-09", "lat": 18.5240, "lng": 73.8430, "count": 8,  "active": true },
+        { "id": "LB-10", "lat": 18.5312, "lng": 73.8482, "count": 12, "active": true }
+      ]
+    },
+    {
+      "step": 8,
+      "day_label": "Day 8 — 48h Post-Fog",
+      "fogged": true,
+      "intervention_event": null,
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5255, "lng": 73.8405, "count": 5,  "active": true },
+        { "id": "LB-02", "lat": 18.5195, "lng": 73.8462, "count": 4,  "active": true },
+        { "id": "LB-03", "lat": 18.5304, "lng": 73.8468, "count": 7,  "active": true },
+        { "id": "LB-04", "lat": 18.5322, "lng": 73.8472, "count": 6,  "active": true },
+        { "id": "LB-05", "lat": 18.5308, "lng": 73.8474, "count": 15, "active": true },
+        { "id": "LB-06", "lat": 18.5292, "lng": 73.8470, "count": 10, "active": true },
+        { "id": "LB-07", "lat": 18.5184, "lng": 73.8496, "count": 4,  "active": true },
+        { "id": "LB-08", "lat": 18.5382, "lng": 73.8472, "count": 5,  "active": true },
+        { "id": "LB-09", "lat": 18.5240, "lng": 73.8430, "count": 5,  "active": true },
+        { "id": "LB-10", "lat": 18.5312, "lng": 73.8482, "count": 7,  "active": true }
+      ]
+    },
+    {
+      "step": 9,
+      "day_label": "Day 9",
+      "fogged": true,
+      "intervention_event": null,
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5255, "lng": 73.8405, "count": 4,  "active": true },
+        { "id": "LB-02", "lat": 18.5195, "lng": 73.8462, "count": 3,  "active": true },
+        { "id": "LB-03", "lat": 18.5304, "lng": 73.8468, "count": 5,  "active": true },
+        { "id": "LB-04", "lat": 18.5322, "lng": 73.8472, "count": 4,  "active": true },
+        { "id": "LB-05", "lat": 18.5308, "lng": 73.8474, "count": 11, "active": true },
+        { "id": "LB-06", "lat": 18.5292, "lng": 73.8470, "count": 7,  "active": true },
+        { "id": "LB-07", "lat": 18.5184, "lng": 73.8496, "count": 3,  "active": true },
+        { "id": "LB-08", "lat": 18.5382, "lng": 73.8472, "count": 4,  "active": true },
+        { "id": "LB-09", "lat": 18.5240, "lng": 73.8430, "count": 4,  "active": true },
+        { "id": "LB-10", "lat": 18.5312, "lng": 73.8482, "count": 5,  "active": true }
+      ]
+    },
+    {
+      "step": 10,
+      "day_label": "Day 10",
+      "fogged": true,
+      "intervention_event": null,
+      "sensors": [
+        { "id": "LB-01", "lat": 18.5255, "lng": 73.8405, "count": 3,  "active": true },
+        { "id": "LB-02", "lat": 18.5195, "lng": 73.8462, "count": 3,  "active": true },
+        { "id": "LB-03", "lat": 18.5304, "lng": 73.8468, "count": 4,  "active": true },
+        { "id": "LB-04", "lat": 18.5322, "lng": 73.8472, "count": 3,  "active": true },
+        { "id": "LB-05", "lat": 18.5308, "lng": 73.8474, "count": 8,  "active": true },
+        { "id": "LB-06", "lat": 18.5292, "lng": 73.8470, "count": 5,  "active": true },
+        { "id": "LB-07", "lat": 18.5184, "lng": 73.8496, "count": 2,  "active": true },
+        { "id": "LB-08", "lat": 18.5382, "lng": 73.8472, "count": 3,  "active": true },
+        { "id": "LB-09", "lat": 18.5240, "lng": 73.8430, "count": 3,  "active": true },
+        { "id": "LB-10", "lat": 18.5312, "lng": 73.8482, "count": 4,  "active": true }
+      ]
+    }
+  ],
+  "reduction_metric": {
+    "pre_fog_peak": 38,
+    "post_fog_48h_peak": 15,
+    "reduction_pct": 60.5,
+    "measured_at_sensor": "LB-05",
+    "hotspot_confirmed": true
+  }
+}

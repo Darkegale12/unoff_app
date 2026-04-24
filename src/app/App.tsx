@@ -35,6 +35,7 @@ function PCMCApp() {
   const [basemap, setBasemap] = useState<'streets' | 'satellite'>('streets');
   const [activeTab, setActiveTab] = useState<'map' | 'dashboard'>('map');
   const [geoJsonLayers, setGeoJsonLayers] = useState<IngestedGeoJsonLayer[]>([]);
+  const [currentStep, setCurrentStep] = useState(1);
 
   const selectedZone = selectedZoneId
     ? mockZones.find(zone => zone.id === selectedZoneId) || null
@@ -46,6 +47,11 @@ function PCMCApp() {
   const totalCases = mockZones.reduce((sum, z) => sum + z.metrics.recentCases, 0);
   const totalHotspots = mockHotspots.length;
   const highRiskHotspots = mockHotspots.filter(h => h.riskLevel === 'high').length;
+
+  // Derive drone survey layer booleans from activeLayers
+  const showWater = activeLayers.includes('standing-water-overlay');
+  const showVegetation = activeLayers.includes('vegetation-overlay');
+  const showContainers = activeLayers.includes('container-risk-overlay');
 
   const lastUpdated = new Date().toLocaleString('en-IN', {
     dateStyle: 'medium',
@@ -190,6 +196,11 @@ function PCMCApp() {
                 center={mapCenter}
                 basemap={basemap}
                 geoJsonLayers={geoJsonLayers}
+                currentStep={currentStep}
+                onStepChange={setCurrentStep}
+                showWater={showWater}
+                showVegetation={showVegetation}
+                showContainers={showContainers}
               />
             </Suspense>
           </div>

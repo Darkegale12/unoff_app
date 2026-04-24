@@ -1,7 +1,18 @@
-import { BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Activity, TrendingDown, TrendingUp, Users, MapPin, Zap, Target, DollarSign, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
+import { BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { Activity, TrendingDown, TrendingUp, Users, MapPin, Zap, Target, DollarSign, Calendar, CheckCircle, AlertCircle, Crosshair } from 'lucide-react';
 import { foggingInstances, casesTrend, zonePerformance, resourceAllocation } from '../data/mock-dashboard-data';
 import { mockHotspots } from '../data/mock-hotspots';
+import timeseriesData from '../data/synthetic/synthetic_timeseries.json';
+
+// Compute sensor trend data from synthetic timeseries
+const sensorTrendData = timeseriesData.timesteps.map(t => ({
+  name: t.day_label.replace(' — FOGGING', ''),
+  total: t.sensors.reduce((sum: number, s: any) => sum + s.count, 0),
+  hotspot: t.sensors.find((s: any) => s.id === 'LB-05')?.count ?? 0,
+  fogged: t.fogged
+}));
+
+const reductionMetric = timeseriesData.reduction_metric;
 
 export function Dashboard() {
   // Calculate KPIs
@@ -50,6 +61,51 @@ export function Dashboard() {
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Calendar className="w-4 h-4" />
             <span>Last 3 Months</span>
+          </div>
+        </div>
+
+        {/* LunchBox Sensor Analytics */}
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-5 border border-indigo-100">
+          <h2 className="text-lg font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+            <Crosshair className="w-5 h-5 text-indigo-600" />
+            LunchBox Sensor Analytics — Fogging Intervention Impact
+          </h2>
+          <div className="grid grid-cols-4 gap-4 mb-5">
+            <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500">
+              <p className="text-xs text-gray-600">Pre-Fog Peak</p>
+              <p className="text-2xl font-bold text-orange-700">{reductionMetric.pre_fog_peak}</p>
+              <p className="text-xs text-gray-500 mt-1">LB-05, Day 6</p>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
+              <p className="text-xs text-gray-600">Post-Fog 48h</p>
+              <p className="text-2xl font-bold text-blue-700">{reductionMetric.post_fog_48h_peak}</p>
+              <p className="text-xs text-gray-500 mt-1">LB-05, Day 8</p>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+              <p className="text-xs text-gray-600">Reduction</p>
+              <p className="text-2xl font-bold text-green-700">{reductionMetric.reduction_pct}%</p>
+              <p className="text-xs text-gray-500 mt-1">At peak sensor</p>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-500">
+              <p className="text-xs text-gray-600">Hotspot Confirmed</p>
+              <p className="text-2xl font-bold text-purple-700">{reductionMetric.hotspot_confirmed ? 'YES' : 'NO'}</p>
+              <p className="text-xs text-gray-500 mt-1">18.5308°N, 73.8474°E</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Mosquito Activity Trend — 10-Day Sensor Window</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={sensorTrendData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <ReferenceLine x="Day 6" stroke="#ff4444" strokeDasharray="4 2" label={{ value: "Fogging", fill: "#ff4444", fontSize: 11 }} />
+                <Area type="monotone" dataKey="total" stroke="#6366f1" fill="#6366f1" fillOpacity={0.2} name="Total Counts" />
+                <Area type="monotone" dataKey="hotspot" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} name="LB-05 (Hotspot)" />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

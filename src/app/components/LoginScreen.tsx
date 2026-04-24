@@ -174,7 +174,7 @@ export function LoginScreen() {
                 {/* Footer */}
                 <div className="px-8 pb-8 text-center">
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                        DBT Vector Disease Control System • Secure Access
+                        Vector Disease Control System • Secure Access
                     </p>
                 </div>
             </div>

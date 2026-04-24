@@ -1,4 +1,4 @@
-import { Layers, AlertCircle, Users, Thermometer, Activity, Hexagon, Droplet, Leaf, Wind, Bug } from 'lucide-react';
+import { Layers, AlertCircle, Users, Thermometer, Activity, Hexagon, Droplet, Leaf, Wind, Bug, CircleDot, Trees, Package } from 'lucide-react';
 
 interface LayerControlProps {
   activeLayers: string[];
@@ -23,6 +23,11 @@ export function LayerControl({ activeLayers, onLayerToggle }: LayerControlProps)
     { id: 'larvae-density', label: 'Larvae Density', icon: Bug, description: 'Larvae count (200m² grid)', category: 'Factor Layers' },
     
     { id: 'risk-score-grid', label: 'Risk Score Grid', icon: AlertCircle, description: 'Composite risk (200m² grid)', category: 'Risk Analysis' },
+
+    // Drone survey layers (synthetic data overlays)
+    { id: 'standing-water-overlay', label: 'Standing Water', icon: Droplet, description: 'Drone-detected water bodies (blue)', category: 'Drone Survey Layers' },
+    { id: 'vegetation-overlay', label: 'Vegetation Density', icon: Trees, description: 'Dense vegetation zones (green)', category: 'Drone Survey Layers' },
+    { id: 'container-risk-overlay', label: 'Container Risk', icon: Package, description: 'High-risk containers (orange)', category: 'Drone Survey Layers' },
   ];
 
   // Group layers by category

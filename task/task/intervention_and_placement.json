@@ -1,0 +1,89 @@
+{
+  "_meta": {
+    "description": "Intervention zone (fogging polygon) and next recommended LunchBox placement (gold pin). Integrate as two separate map layers. The fogging_zone appears when user clicks Mark Intervention. The next_placement pin appears at step 10 as the EI-surface recommendation.",
+    "coordinate_system": "WGS84 GeoJSON (lng, lat)"
+  },
+  "fogging_zone": {
+    "type": "FeatureCollection",
+    "name": "Fogging Intervention Zone",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "FOG-ZONE-01",
+          "label": "Fogging Zone — Day 6",
+          "operator": "PCMC Ward 15",
+          "method": "Thermal Fogging",
+          "chemical": "Deltamethrin 1.25%",
+          "timestamp_start": "2025-06-06T06:00:00+05:30",
+          "timestamp_end": "2025-06-06T08:30:00+05:30",
+          "area_m2": 502000,
+          "pre_intervention_peak": 38,
+          "post_48h_peak": 15,
+          "reduction_pct": 60.5,
+          "status": "completed"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [73.8434, 18.5308],
+            [73.8438, 18.5330],
+            [73.8450, 18.5345],
+            [73.8468, 18.5350],
+            [73.8490, 18.5345],
+            [73.8505, 18.5330],
+            [73.8510, 18.5308],
+            [73.8505, 18.5286],
+            [73.8490, 18.5270],
+            [73.8468, 18.5265],
+            [73.8450, 18.5270],
+            [73.8438, 18.5286],
+            [73.8434, 18.5308]
+          ]]
+        }
+      }
+    ]
+  },
+  "next_placement": {
+    "type": "FeatureCollection",
+    "name": "Recommended Next LunchBox Placement",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "NEXT-LB-01",
+          "label": "Recommended Placement — LB-11",
+          "reason": "EI surface maximum — high residual uncertainty post-fogging. Persistent low-level activity detected in drainage corridor adjacent to SW-02. Bayesian posterior variance above 30m threshold.",
+          "EI_score": 0.87,
+          "posterior_variance_m": 35,
+          "placement_priority": 1,
+          "recommended_by": "Bayesian EI surface — Step 10",
+          "icon": "gold_pin",
+          "suggested_duration_days": 5
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [73.8444, 18.5262]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "NEXT-LB-02",
+          "label": "Secondary Placement — LB-12",
+          "reason": "Second-highest EI score. Rooftop tank cluster CR-07 shows residual larval activity. Monitoring perimeter requires coverage.",
+          "EI_score": 0.71,
+          "posterior_variance_m": 28,
+          "placement_priority": 2,
+          "recommended_by": "Bayesian EI surface — Step 10",
+          "icon": "silver_pin",
+          "suggested_duration_days": 5
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [73.8504, 18.5289]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,315 @@
+{
+  "_meta": {
+    "description": "Drone-derived environmental feature layers for IN-VBDM dashboard. Three layer types: standing_water (polygons), vegetation_density (polygons), container_risk (points). All coordinates in Pune Koregaon Park / Shivajinagar area. Toggle each layer independently on the map.",
+    "coordinate_system": "WGS84 GeoJSON (lng, lat)",
+    "layers": ["standing_water", "vegetation_density", "container_risk"],
+    "rendering": {
+      "standing_water": "blue polygon fill, opacity 0.4",
+      "vegetation_density": "green polygon fill, opacity 0.35",
+      "container_risk": "orange circle marker, radius 8"
+    }
+  },
+  "standing_water": {
+    "type": "FeatureCollection",
+    "name": "Standing Water Bodies",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "SW-01",
+          "name": "Bund Garden Lake Periphery",
+          "area_m2": 2200,
+          "depth_cm": 30,
+          "risk_score": 0.92,
+          "notes": "Stagnant peripheral zone, high breeding likelihood"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [73.8468, 18.5315],
+            [73.8475, 18.5318],
+            [73.8482, 18.5312],
+            [73.8480, 18.5305],
+            [73.8470, 18.5302],
+            [73.8463, 18.5308],
+            [73.8468, 18.5315]
+          ]]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "SW-02",
+          "name": "Drainage Canal Stagnation",
+          "area_m2": 850,
+          "depth_cm": 15,
+          "risk_score": 0.78,
+          "notes": "Open drainage with slow flow, regular stagnation in monsoon"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [73.8440, 18.5265],
+            [73.8448, 18.5268],
+            [73.8452, 18.5260],
+            [73.8444, 18.5255],
+            [73.8436, 18.5258],
+            [73.8440, 18.5265]
+          ]]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "SW-03",
+          "name": "Rooftop Water Tank Cluster",
+          "area_m2": 120,
+          "depth_cm": 60,
+          "risk_score": 0.85,
+          "notes": "High density residential rooftop tanks, uncovered"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [73.8500, 18.5290],
+            [73.8505, 18.5292],
+            [73.8507, 18.5287],
+            [73.8502, 18.5285],
+            [73.8498, 18.5287],
+            [73.8500, 18.5290]
+          ]]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "SW-04",
+          "name": "Construction Site Puddles",
+          "area_m2": 380,
+          "depth_cm": 10,
+          "risk_score": 0.70,
+          "notes": "Active construction, multiple pooling points"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [73.8415, 18.5300],
+            [73.8422, 18.5303],
+            [73.8425, 18.5297],
+            [73.8418, 18.5294],
+            [73.8412, 18.5296],
+            [73.8415, 18.5300]
+          ]]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "SW-05",
+          "name": "Garden Water Feature",
+          "area_m2": 240,
+          "depth_cm": 45,
+          "risk_score": 0.88,
+          "notes": "Ornamental pond, minimal circulation, near confirmed hotspot"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [73.8470, 18.5330],
+            [73.8476, 18.5333],
+            [73.8480, 18.5328],
+            [73.8475, 18.5324],
+            [73.8468, 18.5326],
+            [73.8470, 18.5330]
+          ]]
+        }
+      }
+    ]
+  },
+  "vegetation_density": {
+    "type": "FeatureCollection",
+    "name": "Dense Vegetation Zones",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "VEG-01",
+          "name": "Koregaon Park Dense Canopy",
+          "ndvi": 0.72,
+          "density": "high",
+          "area_m2": 15000,
+          "risk_contribution": 0.65,
+          "notes": "High-canopy shade, retains moisture, primary hotspot zone"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [73.8455, 18.5295],
+            [73.8460, 18.5320],
+            [73.8490, 18.5325],
+            [73.8495, 18.5300],
+            [73.8485, 18.5285],
+            [73.8465, 18.5285],
+            [73.8455, 18.5295]
+          ]]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "VEG-02",
+          "name": "Roadside Overgrowth Corridor",
+          "ndvi": 0.58,
+          "density": "medium",
+          "area_m2": 4200,
+          "risk_contribution": 0.45,
+          "notes": "Unmaintained roadside vegetation, moisture trapping"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [73.8420, 18.5255],
+            [73.8425, 18.5280],
+            [73.8440, 18.5280],
+            [73.8442, 18.5255],
+            [73.8432, 18.5250],
+            [73.8420, 18.5255]
+          ]]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "VEG-03",
+          "name": "Residential Garden Cluster",
+          "ndvi": 0.61,
+          "density": "medium-high",
+          "area_m2": 3800,
+          "risk_contribution": 0.50,
+          "notes": "Dense private gardens, pooling from irrigation"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[
+            [73.8380, 18.5240],
+            [73.8385, 18.5262],
+            [73.8402, 18.5265],
+            [73.8405, 18.5242],
+            [73.8395, 18.5236],
+            [73.8380, 18.5240]
+          ]]
+        }
+      }
+    ]
+  },
+  "container_risk": {
+    "type": "FeatureCollection",
+    "name": "High-Risk Container Sites",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "CR-01",
+          "name": "Uncovered Water Drum (Residential)",
+          "container_type": "drum",
+          "capacity_L": 200,
+          "larvae_present": true,
+          "risk_score": 0.95,
+          "address": "Lane 4, Koregaon Park"
+        },
+        "geometry": { "type": "Point", "coordinates": [73.8472, 18.5310] }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "CR-02",
+          "name": "Discarded Tyres",
+          "container_type": "tyre_pile",
+          "capacity_L": 50,
+          "larvae_present": true,
+          "risk_score": 0.88,
+          "address": "Mechanic workshop, North Main Road"
+        },
+        "geometry": { "type": "Point", "coordinates": [73.8448, 18.5275] }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "CR-03",
+          "name": "Flower Pot Trays (Cluster)",
+          "container_type": "flower_pots",
+          "capacity_L": 5,
+          "larvae_present": false,
+          "risk_score": 0.55,
+          "address": "Apartment Block C, KP"
+        },
+        "geometry": { "type": "Point", "coordinates": [73.8486, 18.5298] }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "CR-04",
+          "name": "Construction Water Storage",
+          "container_type": "open_tank",
+          "capacity_L": 1000,
+          "larvae_present": true,
+          "risk_score": 0.91,
+          "address": "Under-construction site, Mundhwa Road"
+        },
+        "geometry": { "type": "Point", "coordinates": [73.8420, 18.5296] }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "CR-05",
+          "name": "Clogged Roof Gutter",
+          "container_type": "gutter",
+          "capacity_L": 30,
+          "larvae_present": true,
+          "risk_score": 0.82,
+          "address": "Heritage building, Bund Garden Road"
+        },
+        "geometry": { "type": "Point", "coordinates": [73.8468, 18.5322] }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "CR-06",
+          "name": "Abandoned Cooler Unit",
+          "container_type": "cooler",
+          "capacity_L": 40,
+          "larvae_present": false,
+          "risk_score": 0.60,
+          "address": "Vacant plot, Dhole Patil Road"
+        },
+        "geometry": { "type": "Point", "coordinates": [73.8394, 18.5248] }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "CR-07",
+          "name": "Open Sump Tank",
+          "container_type": "sump",
+          "capacity_L": 500,
+          "larvae_present": true,
+          "risk_score": 0.90,
+          "address": "Residential compound, Wanowrie Link"
+        },
+        "geometry": { "type": "Point", "coordinates": [73.8502, 18.5286] }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "CR-08",
+          "name": "Bird Bath / Fountain",
+          "container_type": "ornamental",
+          "capacity_L": 15,
+          "larvae_present": false,
+          "risk_score": 0.48,
+          "address": "Society garden, Agarkar Nagar"
+        },
+        "geometry": { "type": "Point", "coordinates": [73.8430, 18.5310] }
+      }
+    ]
+  }
+}

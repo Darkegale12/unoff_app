@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: transparent; font-family: var(--font-sans, sans-serif); }
+
+.workflow {
+  padding: 24px 0;
+  max-width: 680px;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: 10px;
+  padding-left: 2px;
+}
+
+.phase-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 0;
+}
+
+.phase {
+  flex: 1;
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 10px;
+  padding: 14px 12px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+  background: var(--color-background-primary);
+}
+.phase:hover { border-color: var(--color-border-secondary); background: var(--color-background-secondary); }
+.phase.active { border-width: 1px; }
+
+.phase-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 500;
+  margin-bottom: 8px;
+}
+.phase-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+.phase-sub {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.arrow-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+}
+
+.connector-down {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 28px;
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+}
+
+.connector-loop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 0.5px dashed var(--color-border-secondary);
+  border-radius: 8px;
+  background: var(--color-background-secondary);
+  margin: 0;
+}
+.connector-loop-text {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  flex: 1;
+}
+
+.detail-panel {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 10px;
+  background: var(--color-background-secondary);
+  min-height: 80px;
+  transition: opacity 0.2s;
+}
+.detail-panel h3 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+.detail-panel p {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+.detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.chip {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  font-weight: 400;
+}
+
+.demo-beat {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+}
+.demo-beat:last-child { border-bottom: none; }
+.beat-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 500;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.beat-text {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.beat-text strong {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.tab {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 0.5px solid var(--color-border-tertiary);
+  cursor: pointer;
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: all 0.12s;
+}
+.tab.active {
+  background: var(--color-background-info);
+  color: var(--color-text-info);
+  border-color: transparent;
+}
+
+.c-purple { background: #EEEDFE; color: #3C3489; border-color: #AFA9EC; }
+.c-teal   { background: #E1F5EE; color: #0F6E56; border-color: #5DCAA5; }
+.c-amber  { background: #FAEEDA; color: #854F0B; border-color: #EF9F27; }
+.c-coral  { background: #FAECE7; color: #993C1D; border-color: #F0997B; }
+.c-blue   { background: #E6F1FB; color: #185FA5; border-color: #85B7EB; }
+.c-green  { background: #EAF3DE; color: #3B6D11; border-color: #97C459; }
+.c-red    { background: #FCEBEB; color: #A32D2D; border-color: #F09595; }
+
+@media (prefers-color-scheme: dark) {
+  .c-purple { background: #26215C; color: #CECBF6; border-color: #534AB7; }
+  .c-teal   { background: #04342C; color: #9FE1CB; border-color: #0F6E56; }
+  .c-amber  { background: #412402; color: #FAC775; border-color: #BA7517; }
+  .c-coral  { background: #4A1B0C; color: #F5C4B3; border-color: #993C1D; }
+  .c-blue   { background: #042C53; color: #B5D4F4; border-color: #185FA5; }
+  .c-green  { background: #173404; color: #C0DD97; border-color: #3B6D11; }
+  .c-red    { background: #501313; color: #F7C1C1; border-color: #A32D2D; }
+}
+</style>
+</head>
+<body>
+<div class="workflow">
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('phases')">System phases</button>
+    <button class="tab" onclick="showTab('demo')">Demo narrative</button>
+    <button class="tab" onclick="showTab('data')">Data flow</button>
+  </div>
+
+  <!-- PHASES TAB -->
+  <div id="tab-phases">
+
+    <div class="section-label">Phase 1 — Sense</div>
+    <div class="phase-row" style="gap:6px; margin-bottom:6px;">
+      <div class="phase active c-purple" onclick="showDetail(0)" id="p0">
+        <div class="phase-num c-purple">1</div>
+        <div class="phase-title">Define area</div>
+        <div class="phase-sub">Select ward / zone of interest</div>
+      </div>
+      <div class="arrow-col">→</div>
+      <div class="phase c-purple" onclick="showDetail(1)" id="p1">
+        <div class="phase-num c-purple">2</div>
+        <div class="phase-title">Deploy LunchBoxes</div>
+        <div class="phase-sub">10 sensors placed using EI surface</div>
+      </div>
+      <div class="arrow-col">→</div>
+      <div class="phase c-purple" onclick="showDetail(2)" id="p2">
+        <div class="phase-num c-purple">3</div>
+        <div class="phase-title">Drone survey</div>
+        <div class="phase-sub">Fly, stitch orthomosaic map</div>
+      </div>
+    </div>
+
+    <div class="connector-down">↓</div>
+
+    <div class="section-label">Phase 2 — Understand</div>
+    <div class="phase-row" style="gap:6px; margin-bottom:6px;">
+      <div class="phase c-teal" onclick="showDetail(3)" id="p3">
+        <div class="phase-num c-teal">4</div>
+        <div class="phase-title">CV feature extraction</div>
+        <div class="phase-sub">Water, vegetation, containers</div>
+      </div>
+      <div class="arrow-col">→</div>
+      <div class="phase c-teal" onclick="showDetail(4)" id="p4">
+        <div class="phase-num c-teal">5</div>
+        <div class="phase-title">Bayesian inference</div>
+        <div class="phase-sub">Posterior mean + variance surface</div>
+      </div>
+      <div class="arrow-col">→</div>
+      <div class="phase c-teal" onclick="showDetail(5)" id="p5">
+        <div class="phase-num c-teal">6</div>
+        <div class="phase-title">Hotspot heatmap</div>
+        <div class="phase-sub">Dashboard shows risk zones</div>
+      </div>
+    </div>
+
+    <div class="connector-down">↓</div>
+
+    <div class="section-label">Phase 3 — Adapt</div>
+    <div class="phase-row" style="gap:6px; margin-bottom:6px;">
+      <div class="phase c-amber" onclick="showDetail(6)" id="p6">
+        <div class="phase-num c-amber">7</div>
+        <div class="phase-title">Reposition sensors</div>
+        <div class="phase-sub">EI surface → next best placement</div>
+      </div>
+      <div class="arrow-col">→</div>
+      <div class="phase c-coral" onclick="showDetail(7)" id="p7">
+        <div class="phase-num c-coral">8</div>
+        <div class="phase-title">Fogging intervention</div>
+        <div class="phase-sub">Operator marks zone, logs event</div>
+      </div>
+    </div>
+
+    <div class="connector-down">↓</div>
+
+    <div class="section-label">Phase 4 — Re-measure</div>
+    <div class="phase-row" style="gap:6px; margin-bottom:6px;">
+      <div class="phase c-blue" onclick="showDetail(8)" id="p8">
+        <div class="phase-num c-blue">9</div>
+        <div class="phase-title">Monitor 48h post-fog</div>
+        <div class="phase-sub">Counts drop → heatmap cools</div>
+      </div>
+      <div class="arrow-col">→</div>
+      <div class="phase c-blue" onclick="showDetail(9)" id="p9">
+        <div class="phase-num c-blue">10</div>
+        <div class="phase-title">Compute reduction</div>
+        <div class="phase-sub">% drop, persistence zones</div>
+      </div>
+      <div class="arrow-col">→</div>
+      <div class="phase c-green" onclick="showDetail(10)" id="p10">
+        <div class="phase-num c-green">11</div>
+        <div class="phase-title">Convergence check</div>
+        <div class="phase-sub">σ &lt; 30m → hotspot confirmed</div>
+      </div>
+    </div>
+
+    <!-- Loop back arrow -->
+    <div style="height:10px"></div>
+    <div class="connector-loop">
+      <span style="font-size:14px; color:var(--color-text-tertiary)">↩</span>
+      <div class="connector-loop-text">
+        If not converged → reposition LunchBoxes and repeat from phase 1.
+        Each iteration tightens the hotspot to within 20–40m precision.
+      </div>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="detail-panel" id="detail-panel">
+      <h3 id="detail-title">Click any phase to see details</h3>
+      <p id="detail-body">Each phase is clickable. Tap a numbered box above to see what happens, who does it, and what data it produces.</p>
+    </div>
+  </div>
+
+  <!-- DEMO TAB -->
+  <div id="tab-demo" style="display:none">
+    <div style="margin-bottom:12px;">
+      <p style="font-size:12px; color:var(--color-text-secondary); line-height:1.55;">
+        The PM walkthrough — six clickable beats that tell the story from deployment to recommendation.
+      </p>
+    </div>
+
+    <div class="demo-beat">
+      <div class="beat-num c-purple">1</div>
+      <div class="beat-text"><strong>"Here are 10 LunchBoxes deployed across the ward"</strong> — Sensor pins appear on map at Day 1 positions. Time slider at step 1.</div>
+    </div>
+    <div class="demo-beat">
+      <div class="beat-num c-amber">2</div>
+      <div class="beat-text"><strong>"Day 3 — activity is clustering here"</strong> — Slide to step 3. LB-05 count = 24. Heatmap brightens at [18.5308°N, 73.8474°E].</div>
+    </div>
+    <div class="demo-beat">
+      <div class="beat-num c-teal">3</div>
+      <div class="beat-text"><strong>"Our drone survey confirmed standing water nearby"</strong> — Toggle feature layer. Blue polygon (SW-01 pond) appears overlaid near hotspot.</div>
+    </div>
+    <div class="demo-beat">
+      <div class="beat-num c-coral">4</div>
+      <div class="beat-text"><strong>"We fogged on Day 6"</strong> — Click "Mark intervention". Dashed red polygon appears. Fogging event logged with PCMC operator details.</div>
+    </div>
+    <div class="demo-beat">
+      <div class="beat-num c-blue">5</div>
+      <div class="beat-text"><strong>"Counts dropped 60% within 48 hours"</strong> — Slide to step 8. LB-05 falls 38 → 15. KPI card shows 60.5% reduction. Heatmap cools.</div>
+    </div>
+    <div class="demo-beat">
+      <div class="beat-num c-green">6</div>
+      <div class="beat-text"><strong>"The system recommends placing the next LunchBox here"</strong> — Gold pin appears at [73.8444°E, 18.5262°N]. EI score: 0.87. Drainage corridor residual zone.</div>
+    </div>
+  </div>
+
+  <!-- DATA FLOW TAB -->
+  <div id="tab-data" style="display:none">
+    <div style="margin-bottom:12px;">
+      <p style="font-size:12px; color:var(--color-text-secondary); line-height:1.55;">
+        Three data streams that converge in the dashboard.
+      </p>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px;">
+
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:10px; overflow:hidden;">
+        <div style="padding:10px 14px; border-bottom:0.5px solid var(--color-border-tertiary); display:flex; align-items:center; gap:8px;">
+          <span class="chip c-purple">LunchBox network</span>
+          <span style="font-size:11px; color:var(--color-text-tertiary)">synthetic_timeseries.json</span>
+        </div>
+        <div style="padding:10px 14px; font-size:12px; color:var(--color-text-secondary); line-height:1.55;">
+          10 sensors × 10 timesteps → sensor ID, lat/lng, count, active flag.
+          Powers: time slider, sensor pins, heatmap intensity, trend chart, KPI cards.
+        </div>
+      </div>
+
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:10px; overflow:hidden;">
+        <div style="padding:10px 14px; border-bottom:0.5px solid var(--color-border-tertiary); display:flex; align-items:center; gap:8px;">
+          <span class="chip c-teal">Drone feature layers</span>
+          <span style="font-size:11px; color:var(--color-text-tertiary)">feature_layers.geojson.json</span>
+        </div>
+        <div style="padding:10px 14px; font-size:12px; color:var(--color-text-secondary); line-height:1.55;">
+          3 toggleable layers: standing water (5 polygons), vegetation density (3 polygons), container risk (8 points).
+          Powers: LayerControl toggles, map overlay popups.
+        </div>
+      </div>
+
+      <div style="border:0.5px solid var(--color-border-tertiary); border-radius:10px; overflow:hidden;">
+        <div style="padding:10px 14px; border-bottom:0.5px solid var(--color-border-tertiary); display:flex; align-items:center; gap:8px;">
+          <span class="chip c-coral">Intervention + placement</span>
+          <span style="font-size:11px; color:var(--color-text-tertiary)">intervention_and_placement.json</span>
+        </div>
+        <div style="padding:10px 14px; font-size:12px; color:var(--color-text-secondary); line-height:1.55;">
+          Fogging zone polygon (visible step 6+) + 2 recommended next-placement pins (visible step 10).
+          Powers: "Mark intervention" button, gold pin, reduction metric.
+        </div>
+      </div>
+
+      <div style="padding:10px 14px; border:0.5px dashed var(--color-border-secondary); border-radius:10px; background:var(--color-background-secondary);">
+        <div style="font-size:11px; font-weight:500; color:var(--color-text-secondary); margin-bottom:6px;">Build order → demo readiness</div>
+        <div style="display:flex; flex-wrap:wrap; gap:5px;">
+          <span class="chip" style="background:var(--color-background-danger); color:var(--color-text-danger); border:0.5px solid var(--color-border-danger)">① Time slider (build first)</span>
+          <span class="chip c-purple">② Sensor pins → step-driven</span>
+          <span class="chip c-purple">③ Heatmap → step-driven</span>
+          <span class="chip c-teal">④ Feature layer toggles</span>
+          <span class="chip c-coral">⑤ Fogging zone polygon</span>
+          <span class="chip c-green">⑥ Gold pin at step 10</span>
+          <span class="chip c-blue">⑦ KPI cards</span>
+          <span class="chip c-blue">⑧ Trend chart</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const details = [
+  {
+    title: "1 — Define area of interest",
+    body: "Municipal operator (e.g. PCMC Ward 15) selects the target ward on the dashboard. This sets the spatial bounding box for all downstream sensor placement and drone flight planning.",
+    chips: ["Dashboard", "Operator action", "Ward boundary GeoJSON"]
+  },
+  {
+    title: "2 — Deploy LunchBox network",
+    body: "10 sensor units are placed at locations computed from the Bayesian Expected Improvement (EI) surface. Initial placement uses the ecological prior (vegetation, water, case history). Each LunchBox attracts mosquitoes via CO₂/chemical lure, detects entries via IR sensor + camera, and logs timestamped counts.",
+    chips: ["10 × LunchBox units", "LoRa / WiFi mesh", "ESP32 edge processing", "Battery + solar power"]
+  },
+  {
+    title: "3 — Drone orthomosaic survey",
+    body: "Drone flies the ward at constant altitude, capturing continuous video. Footage is stitched into a georeferenced orthomosaic map. GPS tagging ensures accurate coordinate alignment for overlay on the dashboard map.",
+    chips: ["Constant altitude flight", "Video stitching", "GPS tagging", "Multispectral option"]
+  },
+  {
+    title: "4 — Computer vision feature extraction",
+    body: "The stitched orthomosaic is processed by CV algorithms to detect standing water polygons, dense vegetation zones, and high-risk container sites (tyres, open tanks, drums). Output is a GeoJSON feature layer used as the spatial risk prior.",
+    chips: ["Standing water polygons", "Vegetation NDVI", "Container detection", "GeoJSON output"]
+  },
+  {
+    title: "5 — Bayesian inference engine",
+    body: "LunchBox counts (yᵢ = A·E + ε) are used to update a Gaussian Process posterior over the latent mosquito exposure field E*(x). The prior mean μ₀(x) comes from drone features. Each new reading contracts the posterior variance surface σₙ(x), narrowing the hotspot estimate.",
+    chips: ["GP posterior update", "Prior from CV features", "Variance contraction", "Closed-form conditioning"]
+  },
+  {
+    title: "6 — Hotspot heatmap on dashboard",
+    body: "The posterior mean surface is visualised as a heatmap overlaid on the ward map. The time slider animates hotspot evolution from step 1 → 10. Pre- and post-intervention states are directly comparable by scrubbing the slider.",
+    chips: ["Time slider (T1→T10)", "Heatmap intensity = count", "Pre/post toggle", "Leaflet + GeoJSON"]
+  },
+  {
+    title: "7 — Adaptive sensor repositioning",
+    body: "The EI surface EI(x) = μₙ(x) + λ·σₙ(x) identifies where new measurements would give the most information gain. Top 10 spatially separated EI maxima become the next LunchBox positions. This prevents early clustering and drives convergence.",
+    chips: ["EI surface computation", "Spatial separation constraint", "Gold pin on map", "Iterative refinement"]
+  },
+  {
+    title: "8 — Fogging intervention",
+    body: "Municipal operator clicks 'Mark intervention done' on the dashboard. A fogging event is logged with timestamp, zone polygon, operator ID, and chemical details. The fogging zone appears as a dashed red overlay on the map from step 6 onward.",
+    chips: ["Operator-triggered", "Fogging polygon GeoJSON", "Timestamp logged", "PCMC Ward 15"]
+  },
+  {
+    title: "9 — Monitor post-intervention (48h)",
+    body: "LunchBox counts at T+48h reveal how effectively fogging suppressed mosquito activity. The heatmap visibly cools in the treated zone. Residual activity zones — where mosquitoes persist or rebound — are flagged for follow-up.",
+    chips: ["T+48h sensor readings", "Heatmap cooling", "Persistence zone detection", "Step 8–10 in data"]
+  },
+  {
+    title: "10 — Compute reduction metric",
+    body: "The system automatically computes: % reduction at peak sensor (LB-05: 38 → 15 counts = 60.5%), spatial extent of suppression, and identification of any rebound zones where intervention was ineffective.",
+    chips: ["60.5% reduction at LB-05", "KPI card on dashboard", "Spatial gradient analysis", "Rebound zone flagging"]
+  },
+  {
+    title: "11 — Convergence check",
+    body: "If max σₙ(x) < 20–40m threshold, the hotspot is confirmed and precise enough to trigger targeted drone suppression. If not converged, LunchBoxes are repositioned using the new EI surface and the cycle repeats — each iteration tightens the localization.",
+    chips: ["σₙ(x) < 20–40m = confirmed", "Trigger drone suppression", "Or: reposition and repeat", "Typically 3–5 iterations"]
+  }
+];
+
+let activePhase = 0;
+
+function showDetail(idx) {
+  activePhase = idx;
+  const d = details[idx];
+  document.getElementById('detail-title').textContent = d.title;
+  const body = document.getElementById('detail-body');
+  body.textContent = d.body;
+  const panel = document.getElementById('detail-panel');
+  let chips = panel.querySelector('.detail-chips');
+  if (!chips) {
+    chips = document.createElement('div');
+    chips.className = 'detail-chips';
+    panel.appendChild(chips);
+  }
+  chips.innerHTML = d.chips.map(c => `<span class="chip" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)">${c}</span>`).join('');
+}
+
+function showTab(name) {
+  ['phases','demo','data'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===name ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((btn,i) => {
+    const names = ['phases','demo','data'];
+    btn.classList.toggle('active', names[i]===name);
+  });
+}
+
+showDetail(0);
+</script>
+</body>
+</html>
