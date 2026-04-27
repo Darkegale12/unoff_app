@@ -1,0 +1,32 @@
+{
+  "video_name": "lotus_pond_survey_01",
+  "survey_date": "2026-04-20",
+  "sampling_step": 30,
+  "total_frames_extracted": 24,
+  "frames": [
+    { "frame": "frame_0000.jpg", "water": 0.72, "vegetation": 0.35, "shadow": 0.18 },
+    { "frame": "frame_0001.jpg", "water": 0.68, "vegetation": 0.40, "shadow": 0.22 },
+    { "frame": "frame_0002.jpg", "water": 0.75, "vegetation": 0.32, "shadow": 0.15 },
+    { "frame": "frame_0003.jpg", "water": 0.81, "vegetation": 0.28, "shadow": 0.20 },
+    { "frame": "frame_0004.jpg", "water": 0.65, "vegetation": 0.55, "shadow": 0.25 },
+    { "frame": "frame_0005.jpg", "water": 0.58, "vegetation": 0.62, "shadow": 0.30 },
+    { "frame": "frame_0006.jpg", "water": 0.42, "vegetation": 0.70, "shadow": 0.28 },
+    { "frame": "frame_0007.jpg", "water": 0.38, "vegetation": 0.75, "shadow": 0.35 },
+    { "frame": "frame_0008.jpg", "water": 0.45, "vegetation": 0.68, "shadow": 0.32 },
+    { "frame": "frame_0009.jpg", "water": 0.50, "vegetation": 0.60, "shadow": 0.27 },
+    { "frame": "frame_0010.jpg", "water": 0.55, "vegetation": 0.52, "shadow": 0.24 },
+    { "frame": "frame_0011.jpg", "water": 0.62, "vegetation": 0.45, "shadow": 0.19 },
+    { "frame": "frame_0012.jpg", "water": 0.70, "vegetation": 0.38, "shadow": 0.21 },
+    { "frame": "frame_0013.jpg", "water": 0.78, "vegetation": 0.30, "shadow": 0.16 },
+    { "frame": "frame_0014.jpg", "water": 0.82, "vegetation": 0.25, "shadow": 0.14 },
+    { "frame": "frame_0015.jpg", "water": 0.85, "vegetation": 0.22, "shadow": 0.12 },
+    { "frame": "frame_0016.jpg", "water": 0.80, "vegetation": 0.28, "shadow": 0.18 },
+    { "frame": "frame_0017.jpg", "water": 0.73, "vegetation": 0.35, "shadow": 0.22 },
+    { "frame": "frame_0018.jpg", "water": 0.60, "vegetation": 0.48, "shadow": 0.28 },
+    { "frame": "frame_0019.jpg", "water": 0.52, "vegetation": 0.58, "shadow": 0.32 },
+    { "frame": "frame_0020.jpg", "water": 0.48, "vegetation": 0.65, "shadow": 0.30 },
+    { "frame": "frame_0021.jpg", "water": 0.55, "vegetation": 0.60, "shadow": 0.26 },
+    { "frame": "frame_0022.jpg", "water": 0.63, "vegetation": 0.50, "shadow": 0.20 },
+    { "frame": "frame_0023.jpg", "water": 0.70, "vegetation": 0.42, "shadow": 0.18 }
+  ]
+}

@@ -1,0 +1,7 @@
+grid_size: 16
+vegetation_blur_kernel: 21
+weights:
+  water_presence: 0.5
+  low_motion_proxy: 0.2
+  vegetation_nearby: 0.2
+  shadow_presence: 0.1

@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, BarChart3, Loader2, LogOut, Map, MapPin, Shield } from 'lucide-react';
+import { Activity, AlertTriangle, BarChart3, Camera, Loader2, LogOut, Map, MapPin, Shield } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { useAuth } from './auth/AuthContext';
 import { GeoJSONIngestion, IngestedGeoJsonLayer } from './components/GeoJSONIngestion';
@@ -12,6 +12,7 @@ const MapCenterControl = lazy(() => import('./components/MapCenterControl').then
 const BasemapToggle = lazy(() => import('./components/BasemapToggle').then(m => ({ default: m.BasemapToggle })));
 const ZoneDetailPanel = lazy(() => import('./components/ZoneDetailPanel').then(m => ({ default: m.ZoneDetailPanel })));
 const LoginScreen = lazy(() => import('./components/LoginScreen').then(m => ({ default: m.LoginScreen })));
+const DroneAnalytics = lazy(() => import('./components/DroneAnalytics').then(m => ({ default: m.DroneAnalytics })));
 const DBTApp = lazy(() => import('./components/DBTApp').then(m => ({ default: m.DBTApp })));
 const NashikApp = lazy(() => import('./components/NashikApp').then(m => ({ default: m.NashikApp })));
 
@@ -33,7 +34,7 @@ function PCMCApp() {
   const [activeLayers, setActiveLayers] = useState<string[]>(['risk']);
   const [mapCenter, setMapCenter] = useState<[number, number]>([18.491292, 73.800823]);
   const [basemap, setBasemap] = useState<'streets' | 'satellite'>('streets');
-  const [activeTab, setActiveTab] = useState<'map' | 'dashboard'>('map');
+  const [activeTab, setActiveTab] = useState<'map' | 'dashboard' | 'drone-analytics'>('map');
   const [geoJsonLayers, setGeoJsonLayers] = useState<IngestedGeoJsonLayer[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -52,6 +53,11 @@ function PCMCApp() {
   const showWater = activeLayers.includes('standing-water-overlay');
   const showVegetation = activeLayers.includes('vegetation-overlay');
   const showContainers = activeLayers.includes('container-risk-overlay');
+
+  // Derive CV pipeline layer booleans
+  const showCvWater = activeLayers.includes('cv-water-grid');
+  const showCvVegetation = activeLayers.includes('cv-vegetation-grid');
+  const showCvStagnant = activeLayers.includes('cv-stagnant-risk');
 
   const lastUpdated = new Date().toLocaleString('en-IN', {
     dateStyle: 'medium',
@@ -143,6 +149,16 @@ function PCMCApp() {
             <BarChart3 className="w-5 h-5" />
             Prevention Analytics
           </button>
+          <button
+            onClick={() => setActiveTab('drone-analytics')}
+            className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 ${activeTab === 'drone-analytics'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+              }`}
+          >
+            <Camera className="w-5 h-5" />
+            Drone CV Analytics
+          </button>
         </div>
       </div>
 
@@ -201,6 +217,9 @@ function PCMCApp() {
                 showWater={showWater}
                 showVegetation={showVegetation}
                 showContainers={showContainers}
+                showCvWater={showCvWater}
+                showCvVegetation={showCvVegetation}
+                showCvStagnant={showCvStagnant}
               />
             </Suspense>
           </div>
@@ -220,10 +239,16 @@ function PCMCApp() {
             </Suspense>
           )}
         </div>
-      ) : (
+      ) : activeTab === 'dashboard' ? (
         <div className="flex-1 overflow-hidden">
           <Suspense fallback={<LoadingSpinner message="Loading dashboard..." />}>
             <Dashboard />
+          </Suspense>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-hidden">
+          <Suspense fallback={<LoadingSpinner message="Loading drone analytics..." />}>
+            <DroneAnalytics />
           </Suspense>
         </div>
       )}

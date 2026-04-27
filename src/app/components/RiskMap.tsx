@@ -5,6 +5,7 @@ import { IngestedGeoJsonLayer } from './GeoJSONIngestion';
 import timeseriesData from '../data/synthetic/synthetic_timeseries.json';
 import featureData from '../data/synthetic/feature_layers.geojson.json';
 import interventionData from '../data/synthetic/intervention_and_placement.json';
+import cvGeoJsonData from '../data/cv-pipeline/cv-geojson.json';
 
 interface RiskMapProps {
   zones: ZoneData[];
@@ -20,6 +21,9 @@ interface RiskMapProps {
   showWater: boolean;
   showVegetation: boolean;
   showContainers: boolean;
+  showCvWater?: boolean;
+  showCvVegetation?: boolean;
+  showCvStagnant?: boolean;
 }
 
 function getSensorColor(count: number): string {
@@ -32,7 +36,8 @@ function getSensorColor(count: number): string {
 export function RiskMap({
   zones, hotspots, selectedZone, onZoneClick, activeLayers, center,
   basemap = 'streets', geoJsonLayers = [],
-  currentStep, onStepChange, showWater, showVegetation, showContainers
+  currentStep, onStepChange, showWater, showVegetation, showContainers,
+  showCvWater = false, showCvVegetation = false, showCvStagnant = false
 }: RiskMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -49,6 +54,7 @@ export function RiskMap({
   const containerLayersRef = useRef<any[]>([]);
   const foggingLayersRef = useRef<any[]>([]);
   const placementLayersRef = useRef<any[]>([]);
+  const cvLayersRef = useRef<any[]>([]);
 
   const getRiskColor = (zone: ZoneData, layerId: string) => {
     if (layerId === 'risk') {
@@ -440,6 +446,73 @@ export function RiskMap({
     };
     loadLeaflet();
   }, [currentStep]);
+
+  // === CV PIPELINE: Grid overlay layers ===
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    const loadLeaflet = async () => {
+      const L = (await import('leaflet')).default;
+
+      // Clear old CV layers
+      cvLayersRef.current.forEach(l => mapInstanceRef.current.removeLayer(l));
+      cvLayersRef.current = [];
+
+      if (!showCvWater && !showCvVegetation && !showCvStagnant) return;
+
+      (cvGeoJsonData as any).features.forEach((f: any) => {
+        const props = f.properties;
+        let featureKey = '';
+        let color = '#888';
+
+        if (showCvStagnant) {
+          featureKey = 'stagnant_water';
+          const val = props.stagnant_water ?? 0;
+          if (val >= 0.7) color = '#dc2626';
+          else if (val >= 0.5) color = '#f97316';
+          else if (val >= 0.3) color = '#fbbf24';
+          else color = '#fef3c7';
+        } else if (showCvWater) {
+          featureKey = 'water';
+          const val = props.water ?? 0;
+          if (val >= 0.7) color = '#1e40af';
+          else if (val >= 0.5) color = '#3b82f6';
+          else if (val >= 0.3) color = '#93c5fd';
+          else color = '#dbeafe';
+        } else if (showCvVegetation) {
+          featureKey = 'vegetation';
+          const val = props.vegetation ?? 0;
+          if (val >= 0.7) color = '#15803d';
+          else if (val >= 0.5) color = '#22c55e';
+          else if (val >= 0.3) color = '#86efac';
+          else color = '#dcfce7';
+        }
+
+        const coords = f.geometry.coordinates[0].map(([lng, lat]: [number, number]) => [lat, lng]);
+        const layer = L.polygon(coords, {
+          color: '#ffffff',
+          fillColor: color,
+          fillOpacity: 0.55,
+          weight: 1,
+          opacity: 0.6,
+        }).addTo(mapInstanceRef.current);
+
+        const val = props[featureKey] ?? 0;
+        layer.bindPopup(`
+          <div style="font-size:12px;font-family:system-ui;">
+            <b>CV Grid Cell #${props.cell_id}</b><br/>
+            Water: ${(props.water * 100).toFixed(0)}%<br/>
+            Vegetation: ${(props.vegetation * 100).toFixed(0)}%<br/>
+            Shadow: ${(props.shadow * 100).toFixed(0)}%<br/>
+            Stagnant Risk: <b>${(props.stagnant_water * 100).toFixed(0)}%</b><br/>
+            Water Proximity: ${(props.water_proximity * 100).toFixed(0)}%
+          </div>
+        `);
+
+        cvLayersRef.current.push(layer);
+      });
+    };
+    loadLeaflet();
+  }, [showCvWater, showCvVegetation, showCvStagnant]);
 
   const stepData = timeseriesData.timesteps[currentStep - 1];
 

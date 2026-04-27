@@ -1,4 +1,4 @@
-import { Layers, AlertCircle, Users, Thermometer, Activity, Hexagon, Droplet, Leaf, Wind, Bug, CircleDot, Trees, Package } from 'lucide-react';
+import { Layers, AlertCircle, AlertTriangle, Users, Thermometer, Activity, Hexagon, Droplet, Leaf, Wind, Bug, CircleDot, Trees, Package, Camera } from 'lucide-react';
 
 interface LayerControlProps {
   activeLayers: string[];
@@ -28,6 +28,11 @@ export function LayerControl({ activeLayers, onLayerToggle }: LayerControlProps)
     { id: 'standing-water-overlay', label: 'Standing Water', icon: Droplet, description: 'Drone-detected water bodies (blue)', category: 'Drone Survey Layers' },
     { id: 'vegetation-overlay', label: 'Vegetation Density', icon: Trees, description: 'Dense vegetation zones (green)', category: 'Drone Survey Layers' },
     { id: 'container-risk-overlay', label: 'Container Risk', icon: Package, description: 'High-risk containers (orange)', category: 'Drone Survey Layers' },
+
+    // CV Pipeline layers (from integrated CV pipeline)
+    { id: 'cv-water-grid', label: 'CV Water Detection', icon: Droplet, description: 'Drone CV water grid overlay', category: 'CV Pipeline Layers' },
+    { id: 'cv-vegetation-grid', label: 'CV Vegetation', icon: Trees, description: 'Drone CV vegetation grid overlay', category: 'CV Pipeline Layers' },
+    { id: 'cv-stagnant-risk', label: 'CV Stagnant Water Risk', icon: AlertTriangle, description: 'Stagnant water risk from CV', category: 'CV Pipeline Layers' },
   ];
 
   // Group layers by category

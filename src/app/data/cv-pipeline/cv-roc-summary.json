@@ -1,0 +1,11 @@
+{
+  "pipeline_version": "1.0",
+  "evaluation_date": "2026-04-20",
+  "video_name": "lotus_pond_survey_01",
+  "ground_truth_source": "pseudo-gt (auto-generated from score medians)",
+  "features": [
+    { "feature": "water", "auc": 0.92, "threshold": 0.55 },
+    { "feature": "vegetation", "auc": 0.88, "threshold": 0.50 },
+    { "feature": "shadow", "auc": 0.79, "threshold": 0.22 }
+  ]
+}
