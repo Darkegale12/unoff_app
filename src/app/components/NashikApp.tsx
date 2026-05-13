@@ -169,6 +169,11 @@ export function NashikApp() {
                                 activeLayers={activeLayers}
                                 center={mapCenter}
                                 basemap={basemap}
+                                currentStep={1}
+                                onStepChange={() => {}}
+                                showWater={false}
+                                showVegetation={false}
+                                showContainers={false}
                             />
                         </Suspense>
                     </div>

@@ -4,6 +4,7 @@ import { useAuth } from './auth/AuthContext';
 import { GeoJSONIngestion, IngestedGeoJsonLayer } from './components/GeoJSONIngestion';
 import { mockHotspots } from './data/mock-hotspots';
 import { mockZones } from './data/mock-zones';
+import type { SelectedCell, RiskCellData, FeatureCellData } from './components/InspectionPanel';
 
 const RiskMap = lazy(() => import('./components/RiskMap').then(m => ({ default: m.RiskMap })));
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -15,6 +16,7 @@ const LoginScreen = lazy(() => import('./components/LoginScreen').then(m => ({ d
 const DroneAnalytics = lazy(() => import('./components/DroneAnalytics').then(m => ({ default: m.DroneAnalytics })));
 const DBTApp = lazy(() => import('./components/DBTApp').then(m => ({ default: m.DBTApp })));
 const NashikApp = lazy(() => import('./components/NashikApp').then(m => ({ default: m.NashikApp })));
+const InspectionPanel = lazy(() => import('./components/InspectionPanel').then(m => ({ default: m.InspectionPanel })));
 
 function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   return (
@@ -37,6 +39,18 @@ function PCMCApp() {
   const [activeTab, setActiveTab] = useState<'map' | 'dashboard' | 'drone-analytics'>('map');
   const [geoJsonLayers, setGeoJsonLayers] = useState<IngestedGeoJsonLayer[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Risk grid cell selection for InspectionPanel
+  const [selectedCellData, setSelectedCellData] = useState<{
+    cell: SelectedCell;
+    riskData: RiskCellData;
+    featureData: FeatureCellData | null;
+  } | null>(null);
+
+  const handleCellClick = (cell: SelectedCell, riskData: RiskCellData, featureData: FeatureCellData | null) => {
+    setSelectedCellData({ cell, riskData, featureData });
+    setSelectedZoneId(null); // Clear zone selection when a risk cell is clicked
+  };
 
   const selectedZone = selectedZoneId
     ? mockZones.find(zone => zone.id === selectedZoneId) || null
@@ -220,11 +234,29 @@ function PCMCApp() {
                 showCvWater={showCvWater}
                 showCvVegetation={showCvVegetation}
                 showCvStagnant={showCvStagnant}
+                onCellClick={handleCellClick}
               />
             </Suspense>
           </div>
 
-          {selectedZone && (
+          {selectedCellData && (
+            <Suspense fallback={
+              <div className="w-96 bg-white shadow-xl flex items-center justify-center">
+                <LoadingSpinner />
+              </div>
+            }>
+              <div className="w-96 bg-white shadow-xl overflow-y-auto flex-shrink-0 z-10">
+                <InspectionPanel
+                  selectedCell={selectedCellData.cell}
+                  riskData={selectedCellData.riskData}
+                  featureData={selectedCellData.featureData}
+                  onClose={() => setSelectedCellData(null)}
+                />
+              </div>
+            </Suspense>
+          )}
+
+          {!selectedCellData && selectedZone && (
             <Suspense fallback={
               <div className="w-96 bg-white shadow-xl flex items-center justify-center">
                 <LoadingSpinner />

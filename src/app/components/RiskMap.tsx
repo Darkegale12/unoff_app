@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gridLayers } from '../data/mock-grid-data';
 import { Hotspot, ZoneData } from '../types/map-types';
 import { IngestedGeoJsonLayer } from './GeoJSONIngestion';
@@ -6,6 +6,7 @@ import timeseriesData from '../data/synthetic/synthetic_timeseries.json';
 import featureData from '../data/synthetic/feature_layers.geojson.json';
 import interventionData from '../data/synthetic/intervention_and_placement.json';
 import cvGeoJsonData from '../data/cv-pipeline/cv-geojson.json';
+import type { SelectedCell, RiskCellData, FeatureCellData } from './InspectionPanel';
 
 interface RiskMapProps {
   zones: ZoneData[];
@@ -24,6 +25,7 @@ interface RiskMapProps {
   showCvWater?: boolean;
   showCvVegetation?: boolean;
   showCvStagnant?: boolean;
+  onCellClick?: (cell: SelectedCell, riskData: RiskCellData, featureData: FeatureCellData | null) => void;
 }
 
 function getSensorColor(count: number): string {
@@ -33,11 +35,31 @@ function getSensorColor(count: number): string {
   return '#00cc44';
 }
 
+// RiskTeam color mapping per PDF spec
+function getRiskGridColor(category: number): string {
+  switch (category) {
+    case 2: return '#d6312b'; // High - Red
+    case 1: return '#f4a35a'; // Medium - Orange
+    case 0: return '#4393c3'; // Low - Blue
+    default: return '#94a3b8';
+  }
+}
+
+function getRiskCategoryLabel(category: number): string {
+  switch (category) {
+    case 2: return 'High';
+    case 1: return 'Medium';
+    case 0: return 'Low';
+    default: return 'Unknown';
+  }
+}
+
 export function RiskMap({
   zones, hotspots, selectedZone, onZoneClick, activeLayers, center,
   basemap = 'streets', geoJsonLayers = [],
   currentStep, onStepChange, showWater, showVegetation, showContainers,
-  showCvWater = false, showCvVegetation = false, showCvStagnant = false
+  showCvWater = false, showCvVegetation = false, showCvStagnant = false,
+  onCellClick
 }: RiskMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -55,6 +77,14 @@ export function RiskMap({
   const foggingLayersRef = useRef<any[]>([]);
   const placementLayersRef = useRef<any[]>([]);
   const cvLayersRef = useRef<any[]>([]);
+  const riskGridLayersRef = useRef<any[]>([]);
+  const riskGridDataRef = useRef<any>(null);
+
+  // Time slider state for weekly/daily modes
+  const [timeMode, setTimeMode] = useState<'weekly' | 'daily'>('weekly');
+  const [weekIndex, setWeekIndex] = useState(1);
+  const [dayIndex, setDayIndex] = useState(1);
+  const [riskTimeData, setRiskTimeData] = useState<any>(null);
 
   const getRiskColor = (zone: ZoneData, layerId: string) => {
     if (layerId === 'risk') {
@@ -514,7 +544,121 @@ export function RiskMap({
     loadLeaflet();
   }, [showCvWater, showCvVegetation, showCvStagnant]);
 
+  // === RISK DECISION GRID: 20x20 RiskTeam overlay ===
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    const showRiskGrid = activeLayers.includes('risk-decision-grid');
+
+    const loadLeaflet = async () => {
+      const L = (await import('leaflet')).default;
+
+      // Clear old risk grid layers
+      riskGridLayersRef.current.forEach(l => mapInstanceRef.current.removeLayer(l));
+      riskGridLayersRef.current = [];
+
+      if (!showRiskGrid) return;
+
+      // Fetch the appropriate GeoJSON for the current week
+      const weekNum = String(weekIndex).padStart(2, '0');
+      const phase = weekIndex <= 1 ? 'pre' : 'post';
+      const geoJsonUrl = `/data/riskteam/week${weekNum}_${phase}.geojson`;
+
+      try {
+        const res = await fetch(geoJsonUrl);
+        if (!res.ok) return;
+        const geojson = await res.json();
+        riskGridDataRef.current = geojson;
+
+        geojson.features.forEach((feature: any) => {
+          const props = feature.properties;
+          const category = props.risk_category ?? 0;
+          const color = getRiskGridColor(category);
+
+          const coords = feature.geometry.coordinates[0].map(
+            ([lng, lat]: [number, number]) => [lat, lng]
+          );
+
+          const polygon = L.polygon(coords, {
+            color: '#ffffff',
+            fillColor: color,
+            fillOpacity: 0.55,
+            weight: 1,
+            opacity: 0.6,
+          }).addTo(mapInstanceRef.current);
+
+          polygon.bindPopup(`
+            <div style="font-size:12px;font-family:system-ui;">
+              <b>Cell ${props.cell_id}</b><br/>
+              Risk: <b style="color:${color}">${props.risk_category_label}</b><br/>
+              Avg Risk: ${(props.avg_risk * 100).toFixed(1)}%<br/>
+              Phase: ${props.phase}<br/>
+              Week: ${props.week_label}
+            </div>
+          `);
+
+          // Cell click handler for InspectionPanel
+          polygon.on('click', () => {
+            if (onCellClick) {
+              const row = props.row;
+              const col = props.col;
+              const lat = 18.4 + (row * 0.01) + 0.005;
+              const lon = 73.8 + (col * 0.01) + 0.005;
+
+              const cellData: import('./InspectionPanel').SelectedCell = {
+                row, col,
+                cell_id: props.cell_id,
+                lat, lon,
+              };
+
+              // Derive risk data from the current week/day JSON
+              const riskCellData: import('./InspectionPanel').RiskCellData = {
+                avg_risk: props.avg_risk,
+                risk_category_label: props.risk_category_label || getRiskCategoryLabel(category),
+                uncertainty: props.avg_gt ?? 0,
+                phase: props.phase,
+                climate: riskTimeData?.climate,
+                intervention: riskTimeData?.intervention,
+              };
+
+              onCellClick(cellData, riskCellData, null);
+            }
+          });
+
+          riskGridLayersRef.current.push(polygon);
+        });
+      } catch (e) {
+        console.warn('Failed to load risk grid GeoJSON:', e);
+      }
+    };
+    loadLeaflet();
+  }, [activeLayers, weekIndex, riskTimeData, onCellClick]);
+
+  // === Fetch RiskTeam JSON for current time period ===
+  useEffect(() => {
+    const fetchRiskData = async () => {
+      try {
+        let url: string;
+        if (timeMode === 'weekly') {
+          const weekNum = String(weekIndex).padStart(2, '0');
+          url = `/data/riskteam/week_${weekNum}.json`;
+        } else {
+          const dayNum = String(dayIndex).padStart(3, '0');
+          url = `/data/riskteam/day_${dayNum}.json`;
+        }
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setRiskTimeData(data);
+        }
+      } catch (e) {
+        console.warn('Failed to load risk time data:', e);
+      }
+    };
+    fetchRiskData();
+  }, [timeMode, weekIndex, dayIndex]);
+
   const stepData = timeseriesData.timesteps[currentStep - 1];
+  const showRiskDecisionGrid = activeLayers.includes('risk-decision-grid');
 
   return (
     <div className="h-full w-full relative overflow-hidden">
@@ -525,15 +669,52 @@ export function RiskMap({
         position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
         zIndex: 1000, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
         borderRadius: 12, padding: '12px 24px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-        display: 'flex', alignItems: 'center', gap: 16, minWidth: 420,
+        display: 'flex', alignItems: 'center', gap: 16, minWidth: 560,
         border: '1px solid rgba(0,0,0,0.08)'
       }}>
+        {/* Mode Toggle */}
+        {showRiskDecisionGrid && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button
+                onClick={() => setTimeMode('weekly')}
+                style={{
+                  fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6,
+                  border: 'none', cursor: 'pointer',
+                  background: timeMode === 'weekly' ? '#3b82f6' : '#e2e8f0',
+                  color: timeMode === 'weekly' ? 'white' : '#64748b',
+                }}
+              >Weekly</button>
+              <button
+                onClick={() => setTimeMode('daily')}
+                style={{
+                  fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6,
+                  border: 'none', cursor: 'pointer',
+                  background: timeMode === 'daily' ? '#3b82f6' : '#e2e8f0',
+                  color: timeMode === 'daily' ? 'white' : '#64748b',
+                }}
+              >Daily</button>
+            </div>
+            {riskTimeData?.climate && (
+              <div style={{ display: 'flex', gap: 6, fontSize: 9, color: '#64748b' }}>
+                <span>🌡{riskTimeData.climate.temperature_c}°C</span>
+                <span>🌧{riskTimeData.climate.rainfall_mm}mm</span>
+                <span>💧{riskTimeData.climate.humidity_pct}%</span>
+              </div>
+            )}
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
-              {stepData?.day_label || `Step ${currentStep}`}
+              {showRiskDecisionGrid
+                ? (timeMode === 'weekly'
+                  ? `Week ${weekIndex} ${riskTimeData?.phase === 'pre' ? '(Pre-Treatment)' : '(Post-Treatment)'}`
+                  : `Day ${dayIndex} ${riskTimeData?.phase === 'pre' ? '(Pre)' : '(Post)'}`)
+                : (stepData?.day_label || `Step ${currentStep}`)}
             </span>
-            {stepData?.fogged && (
+            {!showRiskDecisionGrid && stepData?.fogged && (
               <span style={{
                 fontSize: 11, fontWeight: 600, color: '#dc2626',
                 background: '#fef2f2', padding: '2px 8px', borderRadius: 100,
@@ -542,21 +723,62 @@ export function RiskMap({
                 🔥 Post-Fogging
               </span>
             )}
+            {showRiskDecisionGrid && riskTimeData?.intervention?.triggered && (
+              <span style={{
+                fontSize: 11, fontWeight: 600, color: '#dc2626',
+                background: '#fef2f2', padding: '2px 8px', borderRadius: 100,
+                border: '1px solid #fecaca'
+              }}>
+                ⚠ Intervention Active
+              </span>
+            )}
           </div>
-          <input
-            type="range" min={1} max={10} value={currentStep}
-            onChange={(e) => onStepChange(Number(e.target.value))}
-            style={{ width: '100%', cursor: 'pointer', accentColor: '#3b82f6' }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8' }}>
-            <span>Day 1</span><span>Day 10</span>
-          </div>
+          {showRiskDecisionGrid ? (
+            timeMode === 'weekly' ? (
+              <>
+                <input
+                  type="range" min={1} max={10} value={weekIndex}
+                  onChange={(e) => setWeekIndex(Number(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: '#3b82f6' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8' }}>
+                  <span>Wk 1</span><span>Wk 10</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <input
+                  type="range" min={1} max={70} value={dayIndex}
+                  onChange={(e) => setDayIndex(Number(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer', accentColor: '#f59e0b' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8' }}>
+                  <span>Day 1</span><span>Day 70</span>
+                </div>
+              </>
+            )
+          ) : (
+            <>
+              <input
+                type="range" min={1} max={10} value={currentStep}
+                onChange={(e) => onStepChange(Number(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer', accentColor: '#3b82f6' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8' }}>
+                <span>Day 1</span><span>Day 10</span>
+              </div>
+            </>
+          )}
         </div>
         <div style={{
           fontSize: 11, color: '#64748b', textAlign: 'center', minWidth: 60,
           padding: '4px 8px', background: '#f1f5f9', borderRadius: 8
         }}>
-          Step<br /><span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{currentStep}</span>/10
+          {showRiskDecisionGrid
+            ? (timeMode === 'weekly'
+              ? <><span style={{ fontSize: 9 }}>Week</span><br /><span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{weekIndex}</span>/10</>
+              : <><span style={{ fontSize: 9 }}>Day</span><br /><span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{dayIndex}</span>/70</>)
+            : <>Step<br /><span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{currentStep}</span>/10</>}
         </div>
       </div>
     </div>

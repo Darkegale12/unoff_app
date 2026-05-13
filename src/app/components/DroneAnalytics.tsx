@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Camera, Droplets, Trees, Moon, AlertTriangle, TrendingUp, Activity, Eye } from 'lucide-react';
+import { Camera, Droplets, Trees, Moon, AlertTriangle, TrendingUp, Activity, Eye, Video, BarChart3 } from 'lucide-react';
 import cvScoresData from '../data/cv-pipeline/cv-scores.json';
 import cvGridData from '../data/cv-pipeline/cv-grid-features.json';
 import cvRocData from '../data/cv-pipeline/cv-roc-summary.json';
+import { VideoCVDemo } from './VideoCVDemo';
 
 // Prepare chart data from scores
 const chartData = cvScoresData.frames.map((f, i) => ({
@@ -103,6 +105,35 @@ function GridHeatmap({ type, title, icon: Icon }: { type: 'water' | 'vegetation'
 }
 
 export function DroneAnalytics() {
+  const [activeView, setActiveView] = useState<'analytics' | 'video-demo'>('analytics');
+
+  if (activeView === 'video-demo') {
+    return (
+      <div className="h-full flex flex-col">
+        {/* View Toggle */}
+        <div className="bg-white border-b border-gray-200 px-6 py-2 flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => setActiveView('analytics')}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Analytics Dashboard
+          </button>
+          <button
+            onClick={() => setActiveView('video-demo')}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-emerald-600 text-white"
+          >
+            <Video className="w-4 h-4" />
+            Video CV Demo
+          </button>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <VideoCVDemo />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full overflow-y-auto bg-gray-50">
       <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
@@ -117,9 +148,18 @@ export function DroneAnalytics() {
               Computer vision analysis of drone survey: <span className="font-semibold">{cvScoresData.video_name}</span> • {cvScoresData.survey_date} • {cvScoresData.total_frames_extracted} frames
             </p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-xs font-medium text-green-800">Pipeline Complete</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setActiveView('video-demo')}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+            >
+              <Video className="w-4 h-4" />
+              <span className="text-sm font-medium">Video CV Demo</span>
+            </button>
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs font-medium text-green-800">Pipeline Complete</span>
+            </div>
           </div>
         </div>
 

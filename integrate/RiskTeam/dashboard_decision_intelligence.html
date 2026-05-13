@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Decision Intelligence Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body { background: #0a0a1a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
+        h1 { text-align: center; color: #f0e68c; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+        .chart-box { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 15px; width: 48%; min-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .full-width { width: 98%; }
+        .notes { background: #111122; padding: 15px; border-left: 4px solid #f4a35a; margin-top: 20px; color: #ccc; line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <h1>Decision Intelligence Layer: Adaptive Thresholds</h1>
+
+    <div class="notes">
+        <p><b>Cost Function:</b> False Negatives (FN) cost 3.0x. False Positives (FP) cost 1.0x.</p>
+        <p>The system dynamically searches the ROC surface to find the optimal [Low, High] threshold pair that minimizes this exact real-world cost. As the seasons and interventions change week over week, the threshold adapts itself to remain at the absolute minimum cost.</p>
+    </div>
+
+    <div class="container">
+        <!-- ROC Curve -->
+        <div class="chart-box">
+            <h3 style="text-align: center; margin-top: 0;">ROC Surface & Cost Optimization (Final Map)</h3>
+            <div id="rocChart"></div>
+        </div>
+
+        <!-- Timeline Thresholds -->
+        <div class="chart-box">
+            <h3 style="text-align: center; margin-top: 0;">Adaptive Threshold Timeline</h3>
+            <div id="timelineChart"></div>
+        </div>
+
+        <!-- Timeline Costs -->
+        <div class="chart-box full-width">
+            <h3 style="text-align: center; margin-top: 0;">Error Rates & Cost Timeline</h3>
+            <div id="costChart"></div>
+        </div>
+    </div>
+
+    <script>
+        const rocData = [{"lt": 0.15, "ht": 0.45, "acc": 0.2175, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.475, "acc": 0.2375, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.5, "acc": 0.2475, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.525, "acc": 0.25, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.55, "acc": 0.2675, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.575, "acc": 0.2775, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.6, "acc": 0.3025, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.625, "acc": 0.365, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.65, "acc": 0.3875, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.675, "acc": 0.3875, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.7, "acc": 0.3875, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.725, "acc": 0.3875, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.75, "acc": 0.3975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.775, "acc": 0.3975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.15, "ht": 0.8, "acc": 0.3975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.45, "acc": 0.305, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.475, "acc": 0.325, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.5, "acc": 0.335, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.525, "acc": 0.3375, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.55, "acc": 0.35, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.575, "acc": 0.355, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.6, "acc": 0.38, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.625, "acc": 0.4425, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.65, "acc": 0.465, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.675, "acc": 0.465, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.7, "acc": 0.465, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.725, "acc": 0.465, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.75, "acc": 0.475, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.775, "acc": 0.475, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.171, "ht": 0.8, "acc": 0.475, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.45, "acc": 0.3525, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.475, "acc": 0.3725, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.5, "acc": 0.38, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.525, "acc": 0.3825, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.55, "acc": 0.395, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.575, "acc": 0.4, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.6, "acc": 0.42, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.625, "acc": 0.48, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.65, "acc": 0.5025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.675, "acc": 0.5025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.7, "acc": 0.5025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.725, "acc": 0.5025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.75, "acc": 0.5125, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.775, "acc": 0.5125, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.193, "ht": 0.8, "acc": 0.5125, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.45, "acc": 0.3775, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.475, "acc": 0.3975, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.5, "acc": 0.405, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.525, "acc": 0.4075, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.55, "acc": 0.42, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.575, "acc": 0.425, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.6, "acc": 0.4425, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.625, "acc": 0.4975, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.65, "acc": 0.52, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.675, "acc": 0.52, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.7, "acc": 0.52, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.725, "acc": 0.52, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.75, "acc": 0.53, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.775, "acc": 0.53, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.214, "ht": 0.8, "acc": 0.53, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.45, "acc": 0.44, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.475, "acc": 0.46, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.5, "acc": 0.46, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.525, "acc": 0.4625, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.55, "acc": 0.475, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.575, "acc": 0.48, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.6, "acc": 0.4925, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.625, "acc": 0.5425, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.65, "acc": 0.565, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.675, "acc": 0.565, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.7, "acc": 0.565, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.725, "acc": 0.565, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.75, "acc": 0.575, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.775, "acc": 0.575, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.236, "ht": 0.8, "acc": 0.575, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.45, "acc": 0.4675, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.475, "acc": 0.485, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.5, "acc": 0.485, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.525, "acc": 0.4875, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.55, "acc": 0.5, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.575, "acc": 0.505, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.6, "acc": 0.515, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.625, "acc": 0.5625, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.65, "acc": 0.585, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.675, "acc": 0.585, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.7, "acc": 0.585, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.725, "acc": 0.585, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.75, "acc": 0.595, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.775, "acc": 0.595, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.257, "ht": 0.8, "acc": 0.595, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.45, "acc": 0.505, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.475, "acc": 0.5225, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.5, "acc": 0.5225, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.525, "acc": 0.525, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.55, "acc": 0.5375, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.575, "acc": 0.5425, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.6, "acc": 0.545, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.625, "acc": 0.5875, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.65, "acc": 0.61, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.675, "acc": 0.61, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.7, "acc": 0.61, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.725, "acc": 0.61, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.75, "acc": 0.62, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.775, "acc": 0.62, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.279, "ht": 0.8, "acc": 0.62, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.45, "acc": 0.53, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.475, "acc": 0.5475, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.5, "acc": 0.5475, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.525, "acc": 0.55, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.55, "acc": 0.56, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.575, "acc": 0.565, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.6, "acc": 0.5675, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.625, "acc": 0.605, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.65, "acc": 0.6225, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.675, "acc": 0.6225, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.7, "acc": 0.6225, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.725, "acc": 0.6225, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.75, "acc": 0.6325, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.775, "acc": 0.6325, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.3, "ht": 0.8, "acc": 0.6325, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.45, "acc": 0.5475, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.475, "acc": 0.5625, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.5, "acc": 0.5625, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.525, "acc": 0.565, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.55, "acc": 0.575, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.575, "acc": 0.58, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.6, "acc": 0.5825, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.625, "acc": 0.62, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.65, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.675, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.7, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.725, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.75, "acc": 0.6475, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.775, "acc": 0.6475, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.321, "ht": 0.8, "acc": 0.6475, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.45, "acc": 0.5825, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.475, "acc": 0.58, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.5, "acc": 0.58, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.525, "acc": 0.5825, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.55, "acc": 0.5825, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.575, "acc": 0.5875, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.6, "acc": 0.59, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.625, "acc": 0.62, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.65, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.675, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.7, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.725, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.75, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.775, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.343, "ht": 0.8, "acc": 0.6375, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.45, "acc": 0.6125, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.475, "acc": 0.61, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.5, "acc": 0.61, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.525, "acc": 0.61, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.55, "acc": 0.61, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.575, "acc": 0.6125, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.6, "acc": 0.615, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.625, "acc": 0.6425, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.65, "acc": 0.66, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.675, "acc": 0.66, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.7, "acc": 0.66, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.725, "acc": 0.66, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.75, "acc": 0.66, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.775, "acc": 0.66, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.364, "ht": 0.8, "acc": 0.66, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.45, "acc": 0.635, "cost": 125.0, "fpr": 0.2506, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.475, "acc": 0.6325, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.5, "acc": 0.6325, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.525, "acc": 0.6325, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.55, "acc": 0.6325, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.575, "acc": 0.635, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.6, "acc": 0.6375, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.625, "acc": 0.6575, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.65, "acc": 0.6675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.675, "acc": 0.6675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.7, "acc": 0.6675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.725, "acc": 0.6675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.75, "acc": 0.6675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.775, "acc": 0.6675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.386, "ht": 0.8, "acc": 0.6675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.475, "acc": 0.65, "cost": 118.0, "fpr": 0.2327, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.5, "acc": 0.65, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.525, "acc": 0.65, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.55, "acc": 0.65, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.575, "acc": 0.65, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.6, "acc": 0.65, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.625, "acc": 0.665, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.65, "acc": 0.675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.675, "acc": 0.675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.7, "acc": 0.675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.725, "acc": 0.675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.75, "acc": 0.675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.775, "acc": 0.675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.407, "ht": 0.8, "acc": 0.675, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.5, "acc": 0.68, "cost": 108.0, "fpr": 0.2072, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.525, "acc": 0.68, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.55, "acc": 0.68, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.575, "acc": 0.68, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.6, "acc": 0.68, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.625, "acc": 0.6925, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.65, "acc": 0.6975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.675, "acc": 0.6975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.7, "acc": 0.6975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.725, "acc": 0.6975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.75, "acc": 0.6975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.775, "acc": 0.6975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.429, "ht": 0.8, "acc": 0.6975, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.525, "acc": 0.7, "cost": 102.0, "fpr": 0.1918, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.55, "acc": 0.7, "cost": 92.0, "fpr": 0.1662, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.575, "acc": 0.7, "cost": 76.0, "fpr": 0.1253, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.6, "acc": 0.7, "cost": 62.0, "fpr": 0.0895, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.625, "acc": 0.7025, "cost": 36.0, "fpr": 0.023, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.65, "acc": 0.7025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.675, "acc": 0.7025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.7, "acc": 0.7025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.725, "acc": 0.7025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.75, "acc": 0.7025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.775, "acc": 0.7025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}, {"lt": 0.45, "ht": 0.8, "acc": 0.7025, "cost": 27.0, "fpr": 0.0, "fnr": 1.0, "tpr": 0.0}];
+        const timelineData = [{"week": "Wk1", "phase": "PRE", "low_thresh": 0.15, "high_thresh": 0.45, "fpr": 0.008, "fnr": 0.9259, "cost": 78.0}, {"week": "Wk2", "phase": "POST", "low_thresh": 0.15, "high_thresh": 0.567, "fpr": 0.0134, "fnr": 0.5556, "cost": 50.0}, {"week": "Wk3", "phase": "POST", "low_thresh": 0.15, "high_thresh": 0.45, "fpr": 0.0079, "fnr": 0.6364, "cost": 45.0}, {"week": "Wk4", "phase": "POST", "low_thresh": 0.15, "high_thresh": 0.45, "fpr": 0.0053, "fnr": 0.8182, "cost": 56.0}, {"week": "Wk5", "phase": "POST", "low_thresh": 0.15, "high_thresh": 0.45, "fpr": 0.0, "fnr": 1.0, "cost": 39.0}, {"week": "Wk6", "phase": "POST", "low_thresh": 0.15, "high_thresh": 0.45, "fpr": 0.0, "fnr": 1.0, "cost": 42.0}, {"week": "Wk7", "phase": "POST", "low_thresh": 0.15, "high_thresh": 0.45, "fpr": 0.0135, "fnr": 0.5862, "cost": 56.0}, {"week": "Wk8", "phase": "POST", "low_thresh": 0.15, "high_thresh": 0.45, "fpr": 0.0, "fnr": 1.0, "cost": 69.0}, {"week": "Wk9", "phase": "POST", "low_thresh": 0.15, "high_thresh": 0.45, "fpr": 0.0, "fnr": 1.0, "cost": 105.0}, {"week": "Wk10", "phase": "POST", "low_thresh": 0.15, "high_thresh": 0.567, "fpr": 0.0298, "fnr": 0.2258, "cost": 32.0}];
+
+        // 1. Plotly ROC Chart
+        const x_fpr = rocData.map(d => d.fpr);
+        const y_tpr = rocData.map(d => d.tpr);
+        const c_cost = rocData.map(d => d.cost);
+        const text_hover = rocData.map(d => `Low: ${d.lt}<br>High: ${d.ht}<br>FPR: ${d.fpr}<br>TPR: ${d.tpr}<br><b>Cost: ${d.cost}</b>`);
+
+        // Find optimal index
+        let minCostIdx = 0;
+        let minCost = c_cost[0];
+        for(let i=1; i<c_cost.length; i++) {
+            if(c_cost[i] < minCost) { minCost = c_cost[i]; minCostIdx = i; }
+        }
+
+        const traceRoc = {
+            x: x_fpr, y: y_tpr,
+            mode: 'markers',
+            type: 'scatter',
+            text: text_hover,
+            hoverinfo: 'text',
+            marker: {
+                size: 10,
+                color: c_cost,
+                colorscale: 'Viridis',
+                reversescale: true,
+                showscale: true,
+                colorbar: { title: 'Cost', tickfont: {color: 'gray'}, titlefont: {color: 'white'} }
+            }
+        };
+
+        const traceOpt = {
+            x: [x_fpr[minCostIdx]], y: [y_tpr[minCostIdx]],
+            mode: 'markers', type: 'scatter',
+            name: 'Optimal Choice',
+            marker: { symbol: 'star', size: 18, color: 'red', line: {color: 'white', width: 2} }
+        };
+
+        Plotly.newPlot('rocChart', [traceRoc, traceOpt], {
+            plot_bgcolor: '#1a1a2e', paper_bgcolor: '#1a1a2e',
+            xaxis: { title: 'False Positive Rate (FPR)', color: 'white', gridcolor: '#333' },
+            yaxis: { title: 'True Positive Rate (TPR)', color: 'white', gridcolor: '#333' },
+            showlegend: false,
+            height: 400,
+            margin: {l: 50, r: 20, t: 30, b: 50}
+        });
+
+        // 2. Plotly Timeline Chart
+        const weeks = timelineData.map(d => d.week);
+        const traceLow = {
+            x: weeks, y: timelineData.map(d => d.low_thresh),
+            type: 'scatter', mode: 'lines+markers', name: 'Optimal Low Thresh',
+            line: {color: '#4393c3', width: 3}, marker: {size: 8}
+        };
+        const traceHigh = {
+            x: weeks, y: timelineData.map(d => d.high_thresh),
+            type: 'scatter', mode: 'lines+markers', name: 'Optimal High Thresh',
+            line: {color: '#d6312b', width: 3}, marker: {size: 8}
+        };
+
+        Plotly.newPlot('timelineChart', [traceLow, traceHigh], {
+            plot_bgcolor: '#1a1a2e', paper_bgcolor: '#1a1a2e',
+            xaxis: { color: 'white', gridcolor: '#333' },
+            yaxis: { title: 'Threshold Value', color: 'white', gridcolor: '#333', range: [0, 1] },
+            legend: { font: {color: 'white'} },
+            height: 400,
+            margin: {l: 50, r: 20, t: 30, b: 30}
+        });
+
+        // 3. Plotly Cost Chart
+        const traceFpr = {
+            x: weeks, y: timelineData.map(d => d.fpr),
+            type: 'bar', name: 'FPR (False Positives)', marker: {color: '#f4a35a'}
+        };
+        const traceFnr = {
+            x: weeks, y: timelineData.map(d => d.fnr),
+            type: 'bar', name: 'FNR (False Negatives)', marker: {color: '#d6312b'}
+        };
+        const traceCostLine = {
+            x: weeks, y: timelineData.map(d => d.cost),
+            type: 'scatter', mode: 'lines+markers', name: 'Total Cost',
+            line: {color: 'white', width: 3, dash: 'dot'}, yaxis: 'y2'
+        };
+
+        Plotly.newPlot('costChart', [traceFpr, traceFnr, traceCostLine], {
+            plot_bgcolor: '#1a1a2e', paper_bgcolor: '#1a1a2e', barmode: 'group',
+            xaxis: { color: 'white', gridcolor: '#333' },
+            yaxis: { title: 'Error Rate', color: 'white', gridcolor: '#333' },
+            yaxis2: { title: 'Total Cost', color: 'white', overlaying: 'y', side: 'right' },
+            legend: { font: {color: 'white'}, orientation: 'h', y: 1.1 },
+            height: 400,
+            margin: {l: 50, r: 50, t: 50, b: 30}
+        });
+    </script>
+</body>
+</html>
