@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import { Calendar, ChevronLeft, ChevronRight, Flame } from 'lucide-react';
 import { gridLayers } from '../data/mock-grid-data';
 import { Hotspot, ZoneData } from '../types/map-types';
 import { IngestedGeoJsonLayer } from './GeoJSONIngestion';
@@ -26,6 +27,7 @@ interface RiskMapProps {
   showCvVegetation?: boolean;
   showCvStagnant?: boolean;
   onCellClick?: (cell: SelectedCell, riskData: RiskCellData, featureData: FeatureCellData | null) => void;
+  onDroneImagingClick?: () => void;
 }
 
 function getSensorColor(count: number): string {
@@ -59,7 +61,7 @@ export function RiskMap({
   basemap = 'streets', geoJsonLayers = [],
   currentStep, onStepChange, showWater, showVegetation, showContainers,
   showCvWater = false, showCvVegetation = false, showCvStagnant = false,
-  onCellClick
+  onCellClick, onDroneImagingClick
 }: RiskMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -85,6 +87,7 @@ export function RiskMap({
   const [weekIndex, setWeekIndex] = useState(1);
   const [dayIndex, setDayIndex] = useState(1);
   const [riskTimeData, setRiskTimeData] = useState<any>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const getRiskColor = (zone: ZoneData, layerId: string) => {
     if (layerId === 'risk') {
@@ -170,43 +173,6 @@ export function RiskMap({
           }).addTo(map);
           layersRef.current.set(zone.id, layer);
         });
-
-        hotspots.forEach((hotspot) => {
-          const getHotspotColor = (level: string) => {
-            switch (level) {
-              case 'high': return '#dc2626';
-              case 'medium': return '#ea580c';
-              case 'low': return '#16a34a';
-              default: return '#6b7280';
-            }
-          };
-          const color = getHotspotColor(hotspot.riskLevel);
-          const radiusInMeters = Math.sqrt(hotspot.area / Math.PI);
-          const circle = L.circle([hotspot.center[0], hotspot.center[1]], {
-            color, fillColor: color, fillOpacity: 0.6, radius: radiusInMeters, weight: 2,
-          }).addTo(map);
-          circle.bindPopup(`
-            <div style="font-family:system-ui,-apple-system,sans-serif;">
-              <h3 style="margin:0 0 8px 0;font-weight:bold;font-size:14px;">${hotspot.name}</h3>
-              <div style="font-size:12px;color:#374151;">
-                <div><strong>Area:</strong> ${hotspot.area} m²</div>
-                <div><strong>Cases:</strong> ${hotspot.cases}</div>
-                <div><strong>Risk:</strong> ${hotspot.riskLevel.toUpperCase()}</div>
-                <div><strong>Updated:</strong> ${hotspot.lastUpdated}</div>
-              </div>
-            </div>
-          `);
-          if (hotspot.area >= 100) {
-            L.marker([hotspot.center[0], hotspot.center[1]], {
-              icon: L.divIcon({
-                className: 'hotspot-label',
-                html: `<div style="font-size:11px;font-weight:600;color:white;background-color:${color};padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.3);">${hotspot.area}m² - ${hotspot.cases} cases</div>`,
-                iconSize: [80, 20],
-              }),
-            }).addTo(map);
-          }
-          hotspotLayersRef.current.push(circle);
-        });
       };
       loadLeaflet();
       return () => {
@@ -217,6 +183,116 @@ export function RiskMap({
       };
     }
   }, []);
+
+  const onDroneImagingClickRef = useRef(onDroneImagingClick);
+  useEffect(() => {
+    onDroneImagingClickRef.current = onDroneImagingClick;
+  }, [onDroneImagingClick]);
+
+  // Listen to popupopen to attach click handler to the View Drone Video button
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    
+    const handlePopupOpen = (e: any) => {
+      const popup = e.popup;
+      const contentNode = popup.getElement();
+      if (!contentNode) return;
+      
+      const btn = contentNode.querySelector('.view-drone-imaging-btn');
+      if (btn) {
+        btn.onclick = (event: MouseEvent) => {
+          event.preventDefault();
+          if (onDroneImagingClickRef.current) {
+            onDroneImagingClickRef.current();
+          }
+        };
+      }
+    };
+    
+    mapInstanceRef.current.on('popupopen', handlePopupOpen);
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.off('popupopen', handlePopupOpen);
+      }
+    };
+  }, []);
+
+  // Update hotspots dynamically
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    const loadLeaflet = async () => {
+      const L = (await import('leaflet')).default;
+      
+      // Clear old hotspot markers and labels
+      hotspotLayersRef.current.forEach(m => mapInstanceRef.current.removeLayer(m));
+      hotspotLayersRef.current = [];
+
+      hotspots.forEach((hotspot) => {
+        const getHotspotColor = (level: string) => {
+          switch (level) {
+            case 'high': return '#dc2626';
+            case 'medium': return '#ea580c';
+            case 'low': return '#16a34a';
+            default: return '#6b7280';
+          }
+        };
+        const color = getHotspotColor(hotspot.riskLevel);
+        const radiusInMeters = Math.sqrt(hotspot.area / Math.PI);
+        const circle = L.circle([hotspot.center[0], hotspot.center[1]], {
+          color, fillColor: color, fillOpacity: 0.6, radius: radiusInMeters, weight: 2,
+        }).addTo(mapInstanceRef.current);
+
+        const isMMCOE = hotspot.zoneId === 'pond-area';
+        
+        let popupContent = `
+          <div style="font-family:system-ui,-apple-system,sans-serif; min-width: 165px; padding: 2px;">
+            <h3 style="margin:0 0 6px 0;font-weight:bold;font-size:13px;color:#111827;">${hotspot.name}</h3>
+            <div style="font-size:11px;color:#4b5563;line-height:1.4;">
+              <div><strong>Area:</strong> ${hotspot.area} m²</div>
+              <div><strong>Cases:</strong> ${hotspot.cases}</div>
+              <div><strong>Risk:</strong> <span style="font-weight:600;color:${color}">${hotspot.riskLevel.toUpperCase()}</span></div>
+              <div><strong>Updated:</strong> ${hotspot.lastUpdated}</div>
+            </div>
+        `;
+        
+        if (isMMCOE) {
+          popupContent += `
+            <button class="view-drone-imaging-btn text-[10px] mt-2.5 w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded transition-colors flex items-center justify-center gap-1 cursor-pointer" style="border:none;">
+              <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              View Captured Drone Video
+            </button>
+          `;
+        }
+        
+        popupContent += `</div>`;
+        
+        circle.bindPopup(popupContent);
+
+        // Click handler to open the right detail panel
+        circle.on('click', () => {
+          if (hotspot.zoneId) {
+            onZoneClick(hotspot.zoneId);
+          }
+        });
+
+        if (hotspot.area >= 100) {
+          const label = L.marker([hotspot.center[0], hotspot.center[1]], {
+            icon: L.divIcon({
+              className: 'hotspot-label',
+              html: `<div style="font-size:11px;font-weight:600;color:white;background-color:${color};padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.3);">${hotspot.area}m² - ${hotspot.cases} cases</div>`,
+              iconSize: [80, 20],
+            }),
+          }).addTo(mapInstanceRef.current);
+          hotspotLayersRef.current.push(label);
+        }
+
+        hotspotLayersRef.current.push(circle);
+      });
+    };
+    loadLeaflet();
+  }, [hotspots, onZoneClick]);
 
   // Update zone styles
   useEffect(() => {
@@ -664,16 +740,108 @@ export function RiskMap({
     <div className="h-full w-full relative overflow-hidden">
       <div ref={mapRef} className="absolute inset-0 w-full h-full" />
 
-      {/* Time Slider Panel */}
-      <div style={{
-        position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 1000, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
-        borderRadius: 12, padding: '12px 24px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-        display: 'flex', alignItems: 'center', gap: 16, minWidth: 560,
-        border: '1px solid rgba(0,0,0,0.08)'
-      }}>
-        {/* Mode Toggle */}
-        {showRiskDecisionGrid && (
+      {/* Calendar Date Picker */}
+      {!showRiskDecisionGrid && (
+        <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2 p-2.5 bg-white/90 backdrop-blur-sm border border-gray-200/80 rounded-xl shadow-lg w-52">
+          <button
+            onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+            className="flex items-center justify-between px-2.5 py-1.5 bg-white border border-gray-100 rounded-lg shadow-sm hover:bg-gray-50 transition-all font-semibold text-xs text-gray-800 cursor-pointer w-full"
+          >
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+              <span>{currentStep} July 2026</span>
+            </div>
+            <svg
+              className={`w-3.5 h-3.5 text-gray-500 transition-transform ${isCalendarOpen ? 'rotate-180' : ''}`}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Horizontal Slider directly below */}
+          <div className="flex flex-col gap-1 px-1">
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={currentStep}
+              onChange={(e) => {
+                onStepChange(Number(e.target.value));
+              }}
+              className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 transition-all hover:bg-gray-300 outline-none"
+            />
+            <div className="flex justify-between text-[9px] font-bold text-gray-400">
+              <span>Day 1</span>
+              <span>Day 10</span>
+            </div>
+          </div>
+
+          {isCalendarOpen && (
+            <div className="absolute top-[82px] right-0 bg-white border border-gray-200 rounded-xl shadow-xl p-3.5 w-60 flex flex-col gap-2.5 z-[1001]">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold text-gray-900">July 2026</span>
+                <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Select Date</span>
+              </div>
+              
+              <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 border-b border-gray-100 pb-1">
+                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1.5 text-center">
+                {/* 1 July 2026 is Wednesday, so 3 empty cells at start (Sun, Mon, Tue) */}
+                <div className="w-7 h-7" />
+                <div className="w-7 h-7" />
+                <div className="w-7 h-7" />
+
+                {Array.from({ length: 31 }, (_, i) => {
+                  const d = i + 1;
+                  const isSelectable = d >= 1 && d <= 10;
+                  const isActive = d === currentStep;
+                  // July 6 is fogging day
+                  const isFogged = d === 6;
+                  
+                  return (
+                    <button
+                      key={d}
+                      disabled={!isSelectable}
+                      onClick={() => {
+                        onStepChange(d);
+                        setIsCalendarOpen(false);
+                      }}
+                      className={`
+                        w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold relative transition-all cursor-pointer
+                        ${isActive
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-150'
+                          : isSelectable
+                            ? 'hover:bg-gray-100 text-gray-800'
+                            : 'text-gray-200 cursor-not-allowed'
+                        }
+                      `}
+                    >
+                      {d}
+                      {isSelectable && isFogged && (
+                        <Flame className={`absolute -top-1 -right-1 w-2.5 h-2.5 ${isActive ? 'text-yellow-300' : 'text-red-500'}`} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Time Slider Panel - only show for Risk Decision Grid */}
+      {showRiskDecisionGrid && (
+        <div style={{
+          position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 1000, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
+          borderRadius: 12, padding: '12px 24px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          display: 'flex', alignItems: 'center', gap: 16, minWidth: 560,
+          border: '1px solid rgba(0,0,0,0.08)'
+        }}>
+          {/* Mode Toggle */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div style={{ display: 'flex', gap: 4 }}>
               <button
@@ -703,38 +871,25 @@ export function RiskMap({
               </div>
             )}
           </div>
-        )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
-              {showRiskDecisionGrid
-                ? (timeMode === 'weekly'
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>
+                {timeMode === 'weekly'
                   ? `Week ${weekIndex} ${riskTimeData?.phase === 'pre' ? '(Pre-Treatment)' : '(Post-Treatment)'}`
-                  : `Day ${dayIndex} ${riskTimeData?.phase === 'pre' ? '(Pre)' : '(Post)'}`)
-                : (stepData?.day_label || `Step ${currentStep}`)}
-            </span>
-            {!showRiskDecisionGrid && stepData?.fogged && (
-              <span style={{
-                fontSize: 11, fontWeight: 600, color: '#dc2626',
-                background: '#fef2f2', padding: '2px 8px', borderRadius: 100,
-                border: '1px solid #fecaca'
-              }}>
-                🔥 Post-Fogging
+                  : `Day ${dayIndex} ${riskTimeData?.phase === 'pre' ? '(Pre)' : '(Post)'}`}
               </span>
-            )}
-            {showRiskDecisionGrid && riskTimeData?.intervention?.triggered && (
-              <span style={{
-                fontSize: 11, fontWeight: 600, color: '#dc2626',
-                background: '#fef2f2', padding: '2px 8px', borderRadius: 100,
-                border: '1px solid #fecaca'
-              }}>
-                ⚠ Intervention Active
-              </span>
-            )}
-          </div>
-          {showRiskDecisionGrid ? (
-            timeMode === 'weekly' ? (
+              {riskTimeData?.intervention?.triggered && (
+                <span style={{
+                  fontSize: 11, fontWeight: 600, color: '#dc2626',
+                  background: '#fef2f2', padding: '2px 8px', borderRadius: 100,
+                  border: '1px solid #fecaca'
+                }}>
+                  ⚠ Intervention Active
+                </span>
+              )}
+            </div>
+            {timeMode === 'weekly' ? (
               <>
                 <input
                   type="range" min={1} max={10} value={weekIndex}
@@ -756,31 +911,18 @@ export function RiskMap({
                   <span>Day 1</span><span>Day 70</span>
                 </div>
               </>
-            )
-          ) : (
-            <>
-              <input
-                type="range" min={1} max={10} value={currentStep}
-                onChange={(e) => onStepChange(Number(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer', accentColor: '#3b82f6' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8' }}>
-                <span>Day 1</span><span>Day 10</span>
-              </div>
-            </>
-          )}
-        </div>
-        <div style={{
-          fontSize: 11, color: '#64748b', textAlign: 'center', minWidth: 60,
-          padding: '4px 8px', background: '#f1f5f9', borderRadius: 8
-        }}>
-          {showRiskDecisionGrid
-            ? (timeMode === 'weekly'
+            )}
+          </div>
+          <div style={{
+            fontSize: 11, color: '#64748b', textAlign: 'center', minWidth: 60,
+            padding: '4px 8px', background: '#f1f5f9', borderRadius: 8
+          }}>
+            {timeMode === 'weekly'
               ? <><span style={{ fontSize: 9 }}>Week</span><br /><span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{weekIndex}</span>/10</>
-              : <><span style={{ fontSize: 9 }}>Day</span><br /><span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{dayIndex}</span>/70</>)
-            : <>Step<br /><span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{currentStep}</span>/10</>}
+              : <><span style={{ fontSize: 9 }}>Day</span><br /><span style={{ fontSize: 18, fontWeight: 700, color: '#1e293b' }}>{dayIndex}</span>/70</>}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

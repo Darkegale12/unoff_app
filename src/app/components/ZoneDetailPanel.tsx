@@ -6,9 +6,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 interface ZoneDetailPanelProps {
   zone: ZoneData | null;
   onClose: () => void;
+  onDroneImagingClick?: () => void;
 }
 
-export function ZoneDetailPanel({ zone, onClose }: ZoneDetailPanelProps) {
+export function ZoneDetailPanel({ zone, onClose, onDroneImagingClick }: ZoneDetailPanelProps) {
   if (!zone) return null;
 
   // Get hotspots for this zone
@@ -121,6 +122,18 @@ export function ZoneDetailPanel({ zone, onClose }: ZoneDetailPanelProps) {
             ))}
           </div>
         </div>
+
+        {zone.id === 'pond-area' && onDroneImagingClick && (
+          <button
+            onClick={onDroneImagingClick}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
+          >
+            <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            View Captured Drone Video
+          </button>
+        )}
 
         {/* Contextual Metrics */}
         <div>

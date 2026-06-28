@@ -1,14 +1,16 @@
-import { Activity, AlertTriangle, BarChart3, Loader2, LogOut, Map, MapPin, Shield } from 'lucide-react';
+import { Activity, AlertTriangle, BarChart3, Camera, Loader2, LogOut, Map, MapPin, Shield } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { mockHotspots } from '../data/mock-hotspots';
 import { mockZones } from '../data/mock-zones';
+import { getHotspotsForDay, getZonesForDay } from '../data/day-data-helpers';
 
 const RiskMap = lazy(() => import('./RiskMap').then(m => ({ default: m.RiskMap })));
 const LayerControl = lazy(() => import('./LayerControl').then(m => ({ default: m.LayerControl })));
 const MapCenterControl = lazy(() => import('./MapCenterControl').then(m => ({ default: m.MapCenterControl })));
 const BasemapToggle = lazy(() => import('./BasemapToggle').then(m => ({ default: m.BasemapToggle })));
 const ZoneDetailPanel = lazy(() => import('./ZoneDetailPanel').then(m => ({ default: m.ZoneDetailPanel })));
+const DroneAnalytics = lazy(() => import('./DroneAnalytics').then(m => ({ default: m.DroneAnalytics })));
 
 // Only the lotus pond / MMCOE Hill zone
 const DBT_ZONE_ID = 'pond-area';
@@ -32,7 +34,16 @@ export function DBTApp() {
     const [activeLayers, setActiveLayers] = useState<string[]>(['risk']);
     const [mapCenter, setMapCenter] = useState<[number, number]>([18.491292, 73.800823]);
     const [basemap, setBasemap] = useState<'streets' | 'satellite'>('streets');
-    const [activeTab, setActiveTab] = useState<'map' | 'dashboard'>('map');
+    const [activeTab, setActiveTab] = useState<'map' | 'dashboard' | 'drone-analytics'>('map');
+    const [currentStep, setCurrentStep] = useState(1);
+    const [droneAnalyticsView, setDroneAnalyticsView] = useState<'analytics' | 'video-demo'>('analytics');
+
+    const dayZones = getZonesForDay(currentStep);
+    const dayHotspots = getHotspotsForDay(currentStep);
+
+    // Only the lotus pond / MMCOE Hill zone
+    const dbtZone = dayZones.filter(z => z.id === DBT_ZONE_ID);
+    const dbtHotspots = dayHotspots; // show all hotspots
 
     const selectedZone = selectedZoneId
         ? dbtZone.find(z => z.id === selectedZoneId) || null
@@ -107,6 +118,15 @@ export function DBTApp() {
                     >
                         <BarChart3 className="w-5 h-5" /> Zone Analytics
                     </button>
+                    <button
+                        onClick={() => {
+                            setActiveTab('drone-analytics');
+                            setDroneAnalyticsView('analytics');
+                        }}
+                        className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 ${activeTab === 'drone-analytics' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600 hover:text-gray-900'}`}
+                    >
+                        <Camera className="w-5 h-5" /> Drone CV Analytics
+                    </button>
                 </div>
             </div>
 
@@ -146,11 +166,15 @@ export function DBTApp() {
                                 activeLayers={activeLayers}
                                 center={mapCenter}
                                 basemap={basemap}
-                                currentStep={1}
-                                onStepChange={() => {}}
+                                currentStep={currentStep}
+                                onStepChange={setCurrentStep}
                                 showWater={false}
                                 showVegetation={false}
                                 showContainers={false}
+                                onDroneImagingClick={() => {
+                                    setActiveTab('drone-analytics');
+                                    setDroneAnalyticsView('video-demo');
+                                }}
                             />
                         </Suspense>
                     </div>
@@ -158,12 +182,19 @@ export function DBTApp() {
                     {selectedZone && (
                         <Suspense fallback={<div className="w-96 bg-white shadow-xl flex items-center justify-center"><Loading /></div>}>
                             <div className="w-96 bg-white shadow-xl overflow-y-auto flex-shrink-0 z-10">
-                                <ZoneDetailPanel zone={selectedZone} onClose={() => setSelectedZoneId(null)} />
+                                <ZoneDetailPanel
+                                    zone={selectedZone}
+                                    onClose={() => setSelectedZoneId(null)}
+                                    onDroneImagingClick={() => {
+                                        setActiveTab('drone-analytics');
+                                        setDroneAnalyticsView('video-demo');
+                                    }}
+                                />
                             </div>
                         </Suspense>
                     )}
                 </div>
-            ) : (
+            ) : activeTab === 'dashboard' ? (
                 // Simple DBT Dashboard
                 <div className="flex-1 overflow-y-auto bg-gray-50 p-6">
                     {zone && (
@@ -221,6 +252,16 @@ export function DBTApp() {
                             </div>
                         </div>
                     )}
+                </div>
+            ) : (
+                <div className="flex-1 overflow-hidden">
+                    <Suspense fallback={<Loading message="Loading drone analytics..." />}>
+                        <DroneAnalytics
+                            currentStep={currentStep}
+                            view={droneAnalyticsView}
+                            onViewChange={setDroneAnalyticsView}
+                        />
+                    </Suspense>
                 </div>
             )}
         </div>

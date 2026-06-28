@@ -104,8 +104,17 @@ function GridHeatmap({ type, title, icon: Icon }: { type: 'water' | 'vegetation'
   );
 }
 
-export function DroneAnalytics() {
-  const [activeView, setActiveView] = useState<'analytics' | 'video-demo'>('analytics');
+interface DroneAnalyticsProps {
+  currentStep?: number;
+  view?: 'analytics' | 'video-demo';
+  onViewChange?: (view: 'analytics' | 'video-demo') => void;
+}
+
+export function DroneAnalytics({ currentStep, view, onViewChange }: DroneAnalyticsProps = {}) {
+  const [localActiveView, setLocalActiveView] = useState<'analytics' | 'video-demo'>('analytics');
+
+  const activeView = view !== undefined ? view : localActiveView;
+  const setActiveView = onViewChange !== undefined ? onViewChange : setLocalActiveView;
 
   if (activeView === 'video-demo') {
     return (

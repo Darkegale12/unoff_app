@@ -4,6 +4,7 @@ import { useAuth } from './auth/AuthContext';
 import { GeoJSONIngestion, IngestedGeoJsonLayer } from './components/GeoJSONIngestion';
 import { mockHotspots } from './data/mock-hotspots';
 import { mockZones } from './data/mock-zones';
+import { getHotspotsForDay, getZonesForDay } from './data/day-data-helpers';
 import type { SelectedCell, RiskCellData, FeatureCellData } from './components/InspectionPanel';
 
 const RiskMap = lazy(() => import('./components/RiskMap').then(m => ({ default: m.RiskMap })));
@@ -52,16 +53,20 @@ function PCMCApp() {
     setSelectedZoneId(null); // Clear zone selection when a risk cell is clicked
   };
 
+  const dayZones = getZonesForDay(currentStep);
+  const dayHotspots = getHotspotsForDay(currentStep);
+  const [droneAnalyticsView, setDroneAnalyticsView] = useState<'analytics' | 'video-demo'>('analytics');
+
   const selectedZone = selectedZoneId
-    ? mockZones.find(zone => zone.id === selectedZoneId) || null
+    ? dayZones.find(zone => zone.id === selectedZoneId) || null
     : null;
 
-  const highRiskZones = mockZones.filter(z => z.riskLevel === 'high').length;
-  const mediumRiskZones = mockZones.filter(z => z.riskLevel === 'medium').length;
-  const lowRiskZones = mockZones.filter(z => z.riskLevel === 'low').length;
-  const totalCases = mockZones.reduce((sum, z) => sum + z.metrics.recentCases, 0);
-  const totalHotspots = mockHotspots.length;
-  const highRiskHotspots = mockHotspots.filter(h => h.riskLevel === 'high').length;
+  const highRiskZones = dayZones.filter(z => z.riskLevel === 'high').length;
+  const mediumRiskZones = dayZones.filter(z => z.riskLevel === 'medium').length;
+  const lowRiskZones = dayZones.filter(z => z.riskLevel === 'low').length;
+  const totalCases = dayZones.reduce((sum, z) => sum + z.metrics.recentCases, 0);
+  const totalHotspots = dayHotspots.length;
+  const highRiskHotspots = dayHotspots.filter(h => h.riskLevel === 'high').length;
 
   // Derive drone survey layer booleans from activeLayers
   const showWater = activeLayers.includes('standing-water-overlay');
@@ -164,7 +169,10 @@ function PCMCApp() {
             Prevention Analytics
           </button>
           <button
-            onClick={() => setActiveTab('drone-analytics')}
+            onClick={() => {
+              setActiveTab('drone-analytics');
+              setDroneAnalyticsView('analytics');
+            }}
             className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 ${activeTab === 'drone-analytics'
                 ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
@@ -218,8 +226,8 @@ function PCMCApp() {
           <div className="flex-1 relative">
             <Suspense fallback={<LoadingSpinner message="Loading map..." />}>
               <RiskMap
-                zones={mockZones}
-                hotspots={mockHotspots}
+                zones={dayZones}
+                hotspots={dayHotspots}
                 selectedZone={selectedZoneId}
                 onZoneClick={setSelectedZoneId}
                 activeLayers={activeLayers}
@@ -235,6 +243,10 @@ function PCMCApp() {
                 showCvVegetation={showCvVegetation}
                 showCvStagnant={showCvStagnant}
                 onCellClick={handleCellClick}
+                onDroneImagingClick={() => {
+                  setActiveTab('drone-analytics');
+                  setDroneAnalyticsView('video-demo');
+                }}
               />
             </Suspense>
           </div>
@@ -266,6 +278,10 @@ function PCMCApp() {
                 <ZoneDetailPanel
                   zone={selectedZone}
                   onClose={() => setSelectedZoneId(null)}
+                  onDroneImagingClick={() => {
+                    setActiveTab('drone-analytics');
+                    setDroneAnalyticsView('video-demo');
+                  }}
                 />
               </div>
             </Suspense>
@@ -280,7 +296,11 @@ function PCMCApp() {
       ) : (
         <div className="flex-1 overflow-hidden">
           <Suspense fallback={<LoadingSpinner message="Loading drone analytics..." />}>
-            <DroneAnalytics />
+            <DroneAnalytics
+              currentStep={currentStep}
+              view={droneAnalyticsView}
+              onViewChange={setDroneAnalyticsView}
+            />
           </Suspense>
         </div>
       )}

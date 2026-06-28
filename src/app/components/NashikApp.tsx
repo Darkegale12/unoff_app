@@ -3,6 +3,7 @@ import { lazy, Suspense, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { nashikHotspots } from '../data/nashik-hotspots';
 import { nashikZones } from '../data/nashik-zones';
+import { getNashikHotspotsForDay, getNashikZonesForDay } from '../data/day-data-helpers';
 
 const RiskMap = lazy(() => import('./RiskMap').then(m => ({ default: m.RiskMap })));
 const LayerControl = lazy(() => import('./LayerControl').then(m => ({ default: m.LayerControl })));
@@ -29,17 +30,21 @@ export function NashikApp() {
     const [mapCenter, setMapCenter] = useState<[number, number]>([20.0059, 73.7898]);
     const [basemap, setBasemap] = useState<'streets' | 'satellite'>('streets');
     const [activeTab, setActiveTab] = useState<'map' | 'dashboard'>('map');
+    const [currentStep, setCurrentStep] = useState(1);
+
+    const dayZones = getNashikZonesForDay(currentStep);
+    const dayHotspots = getNashikHotspotsForDay(currentStep);
 
     const selectedZone = selectedZoneId
-        ? nashikZones.find(zone => zone.id === selectedZoneId) || null
+        ? dayZones.find(zone => zone.id === selectedZoneId) || null
         : null;
 
-    const highRiskZones = nashikZones.filter(z => z.riskLevel === 'high').length;
-    const mediumRiskZones = nashikZones.filter(z => z.riskLevel === 'medium').length;
-    const lowRiskZones = nashikZones.filter(z => z.riskLevel === 'low').length;
-    const totalCases = nashikZones.reduce((sum, z) => sum + z.metrics.recentCases, 0);
-    const totalHotspots = nashikHotspots.length;
-    const highRiskHotspots = nashikHotspots.filter(h => h.riskLevel === 'high').length;
+    const highRiskZones = dayZones.filter(z => z.riskLevel === 'high').length;
+    const mediumRiskZones = dayZones.filter(z => z.riskLevel === 'medium').length;
+    const lowRiskZones = dayZones.filter(z => z.riskLevel === 'low').length;
+    const totalCases = dayZones.reduce((sum, z) => sum + z.metrics.recentCases, 0);
+    const totalHotspots = dayHotspots.length;
+    const highRiskHotspots = dayHotspots.filter(h => h.riskLevel === 'high').length;
 
     const lastUpdated = new Date().toLocaleString('en-IN', {
         dateStyle: 'medium',
@@ -162,15 +167,15 @@ export function NashikApp() {
                     <div className="flex-1 relative">
                         <Suspense fallback={<Loading message="Loading map..." />}>
                             <RiskMap
-                                zones={nashikZones}
-                                hotspots={nashikHotspots}
+                                zones={dayZones}
+                                hotspots={dayHotspots}
                                 selectedZone={selectedZoneId}
                                 onZoneClick={setSelectedZoneId}
                                 activeLayers={activeLayers}
                                 center={mapCenter}
                                 basemap={basemap}
-                                currentStep={1}
-                                onStepChange={() => {}}
+                                currentStep={currentStep}
+                                onStepChange={setCurrentStep}
                                 showWater={false}
                                 showVegetation={false}
                                 showContainers={false}

@@ -274,32 +274,6 @@ export function VideoCVDemo() {
 
           {/* Right: Live Data Panel (2 cols) */}
           <div className="col-span-2 space-y-4">
-            {/* Pipeline Status */}
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 text-white shadow-xl">
-              <div className="flex items-center gap-2 mb-4">
-                <div className={`w-2.5 h-2.5 rounded-full ${isPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-yellow-400'}`} />
-                <span className="text-sm font-semibold">CV Pipeline Status</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/5 rounded-lg p-3">
-                  <p className="text-[10px] text-gray-400">Video</p>
-                  <p className="text-sm font-mono font-semibold text-emerald-300">{cvScoresData.video_name}</p>
-                </div>
-                <div className="bg-white/5 rounded-lg p-3">
-                  <p className="text-[10px] text-gray-400">Survey Date</p>
-                  <p className="text-sm font-mono font-semibold text-blue-300">{cvScoresData.survey_date}</p>
-                </div>
-                <div className="bg-white/5 rounded-lg p-3">
-                  <p className="text-[10px] text-gray-400">Sampling</p>
-                  <p className="text-sm font-semibold text-yellow-300">Every {cvScoresData.sampling_step}th frame</p>
-                </div>
-                <div className="bg-white/5 rounded-lg p-3">
-                  <p className="text-[10px] text-gray-400">Total Frames</p>
-                  <p className="text-sm font-semibold text-purple-300">{cvScoresData.total_frames_extracted}</p>
-                </div>
-              </div>
-            </div>
-
             {/* Detection Alert */}
             {frameData.water >= 0.7 && (
               <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 animate-pulse-subtle">
